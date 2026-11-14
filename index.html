@@ -16,7 +16,7 @@
       <h1>Still Out<br><em>There.</em></h1>
       <p>Walk up to a piece of space history and hear what it helped us discover.</p>
       <div class="entrance-actions">
-        <button class="primary" id="enter">Enter museum <span aria-hidden="true">→</span></button>
+        <button class="primary" id="enter"><span id="enter-label">Enter museum</span> <span aria-hidden="true">→</span></button>
         <button class="quiet" id="intro-sound" aria-pressed="true">Sound on</button>
       </div>
       <p class="entry-note">Five exhibits across the Moon, Mars and deep space.</p>
@@ -35,6 +35,7 @@
   <aside id="story" aria-label="Artifact story" hidden>
     <div class="story-top"><span class="overline" id="story-tag"></span><button id="close-story" class="quiet" aria-label="Close story">Close</button></div>
     <h2 id="story-title"></h2><p id="caption" aria-live="polite"></p>
+    <p id="audio-notice" role="status" hidden></p>
     <div class="meter" id="story-meter"><span id="story-fill"></span></div>
     <div class="story-actions"><button class="quiet" id="replay">Replay</button><button class="quiet" id="transcript">Full story</button><button class="quiet" id="activity"></button></div>
     <div class="experiment" id="experiment" hidden></div>

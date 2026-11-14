@@ -1,6 +1,6 @@
 # Still Out There
 
-A first-person browser museum for the 2026 NASA Space Apps challenge *Abandoned but not Forgotten*. Walk toward five freestanding 2D exhibit cutouts to hear short stories about the science they made possible.
+A first-person browser museum for the 2026 NASA Space Apps challenge *Abandoned but not Forgotten*. Walk toward five freestanding 3D exhibits to hear short stories about the science they made possible.
 
 ## Run locally
 
@@ -25,6 +25,6 @@ Open the local address printed by Vite. Use WASD or the arrow keys to walk and d
 | InSight lander | Render from the [NASA/JPL-Caltech InSight model](https://science.nasa.gov/resource/insight-lander-3d-model/) and [NASA JPL's InSight teaching resource](https://www.jpl.nasa.gov/edu/resources/teachable-moment/how-insight-revealed-the-heart-of-mars/). |
 | Voyager 1 | Render from the [NASA VTAD Voyager model](https://science.nasa.gov/resource/voyager-3d-model/), [NASA/JPL-Caltech lobby illustration](https://science.nasa.gov/image-detail/pia17462/), and a short excerpt from [NASA/JPL-Caltech/University of Iowa plasma wave playback](https://science.nasa.gov/photojournal/voyager-captures-sounds-of-interstellar-space/). |
 
-Apollo 11 and Apollo 17 are cropped and masked archival photos. The other three cutouts are fixed-angle renders of NASA 3D models. The illustrations and simulations have labels in the app where applicable. The first-person stories are dramatized from the mission sources. The demo uses synthesized meSpeak voices with local MP3 playback. Narration copy and cue times are in `src/exhibits.js` and `src/narration.js`.
+The Apollo exhibits are simplified 3D reconstructions based on the cited mission references. Opportunity, InSight, and Voyager use optimized NASA models. Archival cutouts and fixed-angle renders appear in the exhibit directory and as a fallback on devices without WebGL 2. The first-person stories are dramatized from the mission sources and voiced by Kokoro Heart. Narration copy and cue times are in `src/exhibits.js` and `src/narration.js`.
 
 The walk-through uses Three.js and takes inspiration from the [3D Art Gallery](https://github.com/ilaydaozel/3D-Art-Gallery). The gallery uses CSS 3D rendering when WebGL 2 is unavailable and keeps the same movement and distance triggers.

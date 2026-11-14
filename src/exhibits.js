@@ -12,7 +12,7 @@ export const exhibits = [
   },
   {
     id: 'apollo17', name: 'Apollo 17 lunar rover', title: 'The Last Drive', place: 'The Moon', year: '1972',
-    status: 'Parked on the Moon', color: '#b3d4f5', position: [8.5, 3.5], width: 4.7,
+    status: 'Parked on the Moon', color: '#b3d4f5', position: [8, 3.5], width: 4.7,
     source: 'https://www.nasa.gov/missions/apollo/apollo-17-mission-details/',
     story: [
       'I’m the electric rover that carried Gene Cernan and Jack Schmitt across the Taurus–Littrow valley in 1972.',
@@ -24,7 +24,7 @@ export const exhibits = [
   },
   {
     id: 'opportunity', name: 'Opportunity rover', title: 'The Blueberry Mystery', place: 'Mars', year: '2004',
-    status: 'Mission ended', color: '#f6a578', position: [-8.5, -8.3], width: 4.4,
+    status: 'Mission ended', color: '#f6a578', position: [-8, -8.3], width: 4.4,
     source: 'https://science.nasa.gov/photojournal/keepers-of-the-hematite/',
     story: [
       'When I landed on Mars in 2004, I found tiny round grains scattered through the rocks. My team called them blueberries.',
@@ -35,7 +35,7 @@ export const exhibits = [
   },
   {
     id: 'insight', name: 'InSight lander', title: 'The Heart of Mars', place: 'Mars', year: '2018',
-    status: 'Mission ended', color: '#f6a578', position: [8.5, -8.3], width: 4.6,
+    status: 'Mission ended', color: '#f6a578', position: [8, -8.3], width: 4.6,
     source: 'https://www.jpl.nasa.gov/edu/resources/teachable-moment/how-insight-revealed-the-heart-of-mars/',
     story: [
       'I’m InSight. My job on Mars was to stay in one place and listen to the ground.',
@@ -46,7 +46,7 @@ export const exhibits = [
   },
   {
     id: 'voyager', name: 'Voyager 1', title: 'Beyond the Sun’s Bubble', place: 'Deep space', year: '1977',
-    status: 'Extended mission', color: '#b7aafa', position: [0, -14], width: 5.3,
+    status: 'Extended mission', color: '#b7aafa', position: [0, -13.5], width: 5.3,
     source: 'https://www.jpl.nasa.gov/images/pia17045-voyager-captures-sounds-of-interstellar-space/',
     story: [
       'I left Earth in 1977. Long after my visits to Jupiter and Saturn, I crossed the edge of the bubble blown by the Sun.',

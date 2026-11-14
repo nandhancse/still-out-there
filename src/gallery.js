@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { createCssGallery } from './css-gallery.js';
+import { loadArtifact } from './artifact-models.js';
 
 const START = new THREE.Vector3(-4.6, 1.62, 7.6);
+const STORY_CLEARANCE = 1.10;
+const FALLBACK_TRIGGER = 1.85;
 const MAX_PITCH = Math.PI * 0.39;
 const WALK_SPEED = 4.1;
 const horizontalDistance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -133,7 +136,6 @@ export function createGallery(container, exhibits, onFrame) {
   shadowCtx.fillStyle = shade;
   shadowCtx.fillRect(0, 0, 128, 128);
   const shadowTexture = new THREE.CanvasTexture(shadowCanvas);
-  const textureBase = import.meta.env.BASE_URL;
 
   const stations = exhibits.map((exhibit, index) => {
     const [x, z] = exhibit.position;
@@ -144,47 +146,72 @@ export function createGallery(container, exhibits, onFrame) {
     scene.add(group);
     if (css) {
       const { focus } = css.station(group, exhibit, index);
-      return { exhibit, group, focus };
+      return { exhibit, group, radius: .84, trigger: FALLBACK_TRIGGER, focus };
     }
-    const texture = imageLoader.load(
-      `${textureBase}exhibits/${exhibit.id}.webp`,
-      (loaded) => {
-        const height = exhibit.width * loaded.image.height / loaded.image.width;
-        cutout.scale.set(exhibit.width, height, 1);
-        cutout.position.y = height / 2 + .035;
-        label.position.y = height + .58;
-        cutout.visible = true;
-      }
-    );
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    const cutout = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: .08, side: THREE.DoubleSide, toneMapped: false }));
-    cutout.visible = false;
-    group.add(cutout);
     const label = plaque(exhibit.name, `0${index + 1}  /  ${exhibit.place.toUpperCase()}`, exhibit.color);
-    label.position.set(0, 2.7, .05);
+    label.position.set(0, 2.45, .05);
+    label.visible = false;
     group.add(label);
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(exhibit.width * 1.35, 2.6),
       new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = .012;
     group.add(shadow);
-    const plate = new THREE.Mesh(new THREE.RingGeometry(1.78, 1.84, 56, 1, Math.PI * .11, Math.PI * .78),
+    const trigger = FALLBACK_TRIGGER;
+    const plate = new THREE.Mesh(new THREE.RingGeometry(trigger - .03, trigger + .03, 64),
       new THREE.MeshBasicMaterial({ color: exhibit.color, transparent: true, opacity: .45 }));
     plate.rotation.x = -Math.PI / 2;
-    // The center is the exhibit. From the visitor's side the arc marks the trigger radius.
-    plate.rotation.z = Math.PI;
     plate.position.y = .021;
     group.add(plate);
     const light = new THREE.SpotLight(exhibit.color, 200, 15, .62, .8, 1.55);
     light.position.set(x, 5.55, z + 1.28);
     light.target.position.set(x, 0, z);
     scene.add(light, light.target);
-    return { exhibit, group, focus(value) {
+    const station = { exhibit, group, radius: .84, trigger, focus(value) {
       light.intensity = value ? 280 : 195;
       plate.material.opacity = value ? .95 : .36;
     } };
+    let ready = null;
+    const start = () => {
+      if (ready) return ready;
+      ready = loadArtifact(exhibit.id).then(({ model, dimensions }) => {
+        const standHeight = exhibit.id === 'apollo11' ? .29 : exhibit.id === 'voyager' ? .32 : .13;
+        const baseWidth = dimensions.x + .22;
+        const baseDepth = dimensions.z + .22;
+        const platform = new THREE.Mesh(new THREE.BoxGeometry(baseWidth, standHeight, baseDepth), materials.column);
+        platform.position.y = standHeight / 2;
+        group.add(platform);
+        model.position.y = standHeight + .015;
+        group.add(model);
+        group.updateMatrixWorld(true);
+        station.radius = Math.hypot(baseWidth, baseDepth) / 2;
+        station.modelHeight = dimensions.y + standHeight;
+        station.trigger = station.radius + STORY_CLEARANCE;
+        plate.scale.setScalar(station.trigger / trigger);
+        label.position.y = Math.max(1.65, dimensions.y + standHeight + .42);
+        label.visible = true;
+      }).catch(error => {
+        const texture = imageLoader.load(`${import.meta.env.BASE_URL}exhibits/${exhibit.id}.webp`, loaded => {
+          const height = exhibit.width * loaded.image.height / loaded.image.width;
+          fallback.scale.set(exhibit.width, height, 1);
+          fallback.position.y = height / 2 + .035;
+          fallback.visible = true;
+          label.position.y = height + .5;
+        });
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const fallback = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+          new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: .08, side: THREE.DoubleSide, toneMapped: false }));
+        fallback.visible = false;
+        group.add(fallback);
+        label.visible = true;
+
+        console.error('Unable to load exhibit model', exhibit.id, error);
+      });
+      return ready;
+    };
+    station.load = start;
+    station.label = label;
+    return station;
   });
 
   const keys = new Set();
@@ -256,7 +283,7 @@ export function createGallery(container, exhibits, onFrame) {
 
   function canStandAt(x, z) {
     return Math.abs(x) < 11.65 && z > -18.15 && z < 13.15 &&
-      stations.every(({ group }) => Math.hypot(x - group.position.x, z - group.position.z) > .84);
+      stations.every(({ group, radius }) => Math.hypot(x - group.position.x, z - group.position.z) > radius + .12);
   }
   function resize() {
     const { clientWidth, clientHeight } = container;
@@ -287,12 +314,13 @@ export function createGallery(container, exhibits, onFrame) {
       if (canStandAt(camera.position.x, next.z)) camera.position.z = next.z;
       const nearest = stations.map(station => ({
         ...station, distance: horizontalDistance(station.group.position, camera.position)
-      })).sort((a, b) => a.distance - b.distance)[0];
+      })).sort((a, b) => (a.distance - a.radius) - (b.distance - b.radius))[0];
       for (const station of stations) {
-        const focused = station.exhibit === nearest.exhibit && nearest.distance <= 1.85;
+        const focused = station.exhibit === nearest.exhibit && nearest.distance <= station.trigger;
         station.focus(focused);
+        if (station.label) station.label.quaternion.copy(station.group.quaternion).invert().multiply(camera.quaternion);
       }
-      onFrame(nearest.exhibit, nearest.distance);
+      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius);
     }
     renderer.render(scene, camera);
   }
@@ -305,7 +333,12 @@ export function createGallery(container, exhibits, onFrame) {
   placeAtEntrance();
 
   return {
-    start() { active = true; container.classList.add('inside'); },
+    load() { return Promise.all(stations.map(station => station.load?.())); },
+    start() {
+      resize();
+      active = true;
+      container.classList.add('inside');
+    },
     stop() {
       active = false; blocked = false;
       clearMovement(); placeAtEntrance(); container.classList.remove('inside');
@@ -314,8 +347,10 @@ export function createGallery(container, exhibits, onFrame) {
     releasePointer: clearMovement,
     goTo(exhibit) {
       const [x, z] = exhibit.position;
-      camera.position.set(x - Math.sign(x) * 1.35, START.y, z + 2.35);
-      camera.lookAt(x, 1.25, z);
+      const station = stations.find(item => item.exhibit === exhibit);
+      const distance = Math.max(2.35, station.radius + 1.30, station.radius / camera.aspect);
+      camera.position.set(x - Math.sign(x) * .85, START.y, Math.min(z + distance, 12.9));
+      camera.lookAt(x, station.modelHeight ? station.modelHeight / 2 + .15 : 1.25, z);
       clearMovement();
     }
   };

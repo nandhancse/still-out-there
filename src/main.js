@@ -1,6 +1,5 @@
 import './style.css';
 import { exhibits } from './exhibits.js';
-import { createGallery } from './gallery.js';
 import { durations } from './narration.js';
 
 const byId = id => document.getElementById(id);
@@ -12,6 +11,7 @@ const distancePanel = byId('distance');
 const caption = byId('caption');
 const experiment = byId('experiment');
 const progress = byId('story-fill');
+const audioNotice = byId('audio-notice');
 const base = import.meta.env.BASE_URL;
 const audio = new Audio();
 audio.id = 'narration';
@@ -20,9 +20,9 @@ document.body.append(audio);
 audio.preload = 'auto';
 const visited = new Set();
 const VIEW_RANGE = 6;
-const TRIGGER_RANGE = 1.85;
 let gallery;
 let inMuseum = false;
+let entering = false;
 let sound = true;
 let current;
 let storyStart = 0;
@@ -30,9 +30,10 @@ let lastCaption;
 let animationId;
 let fullStory = false;
 let finished = false;
+let playbackRequest = 0;
 
 function prepareAudio() {
-  // A short silent source gives touch browsers an explicit media interaction.
+  // Keep the same media element unlocked for stories started by proximity.
   if (!audio.getAttribute('src')) {
     audio.src = `${base}audio/enter.wav`;
     audio.play().catch(() => {});
@@ -48,25 +49,37 @@ function toggleSound() {
     byId(id).textContent = sound ? 'Sound on' : 'Sound off';
     byId(id).setAttribute('aria-pressed', sound);
   }
-  if (!sound) return;
+  audioNotice.hidden = true;
+  if (!sound || sample) return;
   if (!current || finished) {
     if (!audio.getAttribute('src')) prepareAudio();
   } else if (audio.paused) {
     const elapsed = (performance.now() - storyStart) / 1000;
     if (audio.readyState > 0) audio.currentTime = Math.min(audio.duration, elapsed);
-    audio.play().catch(() => {});
+    playNarration();
   }
 }
 
 function stopStory() {
+  playbackRequest++;
   cancelAnimationFrame(animationId);
   audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
+  audioNotice.hidden = true;
   story.hidden = true;
   experiment.hidden = true;
   experiment.replaceChildren();
   current = null;
+}
+
+function playNarration() {
+  const request = ++playbackRequest;
+  audio.play().catch(error => {
+    if (request !== playbackRequest || !current || !sound || error.name === 'AbortError') return;
+    audioNotice.textContent = error.name === 'NotAllowedError'
+      ? 'Tap Replay to hear the narration.'
+      : 'Narration unavailable. You can read the full story.';
+    audioNotice.hidden = false;
+  });
 }
 
 function tickStory(now) {
@@ -102,16 +115,17 @@ function playStory(exhibit) {
   story.hidden = false;
   audio.src = `${base}audio/${exhibit.id}.mp3`;
   audio.muted = !sound;
-  audio.play().catch(() => {});
+  playNarration();
   storyStart = performance.now();
   tickStory(storyStart);
 }
 
-function approach(exhibit, distance) {
+function approach(exhibit, distance, triggerRange) {
+  distance = Math.max(0, distance);
   distancePanel.hidden = distance > VIEW_RANGE;
   if (distancePanel.hidden) return;
   const rounded = `${distance.toFixed(1)} m`;
-  const progress = Math.min(1, Math.max(0, (VIEW_RANGE - distance) / (VIEW_RANGE - TRIGGER_RANGE)));
+  const progress = Math.min(1, Math.max(0, (VIEW_RANGE - distance) / (VIEW_RANGE - triggerRange)));
   const name = byId('target-name');
   const range = byId('target-range');
   const hint = byId('distance-hint');
@@ -121,27 +135,42 @@ function approach(exhibit, distance) {
   if (range.textContent !== rounded) range.textContent = rounded;
   if (hint.textContent !== message) hint.textContent = message;
   byId('distance-fill').style.transform = `scaleX(${heard ? 1 : progress})`;
-  if (!heard && distance <= TRIGGER_RANGE) playStory(exhibit);
+  if (!heard && distance <= triggerRange) playStory(exhibit);
 }
 
-function enterMuseum() {
-  if (inMuseum) return;
-  if (!gallery) {
-    try {
+async function enterMuseum() {
+  if (inMuseum || entering) return;
+  prepareAudio();
+  entering = true;
+  const button = byId('enter');
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  byId('enter-label').textContent = 'Opening museum…';
+  try {
+    if (!gallery) {
+      const { createGallery } = await import('./gallery.js');
       gallery = createGallery(byId('scene'), exhibits, approach);
-    } catch (error) {
-      console.warn('3D gallery unavailable', error);
-      openDirectory();
-      return;
+      await gallery.load();
     }
+  } catch (error) {
+    console.warn('3D gallery unavailable', error);
+    openDirectory();
+    return;
+  } finally {
+    entering = false;
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    byId('enter-label').textContent = 'Enter museum';
   }
-  stopStory();
+  if (current) stopStory();
+  if (directory.open) directory.close();
   lobby.hidden = true;
   walk.hidden = false;
   inMuseum = true;
   byId('control-hint').textContent = matchMedia('(pointer:coarse)').matches
     ? 'Drag to look around'
     : 'WASD to walk · Drag or click to look · Q/E to turn';
+  gallery.pause(false);
   gallery.start();
   document.activeElement?.blur();
 }
@@ -162,7 +191,7 @@ function openDirectory() {
   directory.showModal();
 }
 
-byId('enter').addEventListener('click', () => { prepareAudio(); enterMuseum(); });
+byId('enter').addEventListener('click', enterMuseum);
 for (const id of ['intro-sound','tour-sound']) byId(id).addEventListener('click', toggleSound);
 byId('back').addEventListener('click', leaveMuseum);
 for (const id of ['open-exhibits','tour-exhibits']) byId(id).addEventListener('click', openDirectory);

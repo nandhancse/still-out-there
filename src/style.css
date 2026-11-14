@@ -27,6 +27,7 @@ h1,h2{font-family:Georgia,serif;font-weight:400}
 .primary,.quiet{border-radius:4px;min-height:42px}
 .primary{background:var(--cream);border:1px solid var(--cream);color:#17141a;display:inline-flex;justify-content:space-between;align-items:center;gap:25px;font-size:14px;font-weight:750;padding:0 18px;min-height:51px}
 .primary:hover{background:#ffe8bb}
+.primary:disabled{cursor:progress;opacity:.8}
 .quiet{border:1px solid var(--line);color:#f4eee4;background:#111722d9;padding:0 12px;font-size:12px}
 .quiet:hover{background:#313b48}
 .opening .entry-note{font-size:12px;letter-spacing:.04em;color:#b7bec8;margin:15px 0 0}
@@ -50,6 +51,7 @@ h1,h2{font-family:Georgia,serif;font-weight:400}
 .story-top button{font-size:12px;min-height:32px}
 h2{font-size:clamp(25px,3vw,37px);line-height:1.05;letter-spacing:-.035em;margin:12px 0}
 #caption{font-size:14px;line-height:1.5;color:#e4e2de;margin:0 0 13px}
+#audio-notice{color:var(--cream);font-size:12px;margin:0 0 10px}
 .story-actions{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0 10px}
 .story-actions .quiet{min-height:35px}
 .source{color:#ecd6a8;font-size:11px;text-underline-offset:3px}
