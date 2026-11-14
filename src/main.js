@@ -64,6 +64,7 @@ function stopStory() {
   playbackRequest++;
   cancelAnimationFrame(animationId);
   audio.pause();
+  experiment.querySelector('audio')?.pause();
   audioNotice.hidden = true;
   story.hidden = true;
   experiment.hidden = true;
@@ -86,7 +87,7 @@ function tickStory(now) {
   if (!current) return;
   const timings = durations[current.id];
   const end = timings.at(-1);
-  const elapsed = Math.min(audio.currentTime > 0 && !audio.paused ? audio.currentTime : (now - storyStart) / 1000, end);
+  const elapsed = audio.ended ? end : Math.min(audio.paused ? (now - storyStart) / 1000 : audio.currentTime, end);
   progress.style.transform = `scaleX(${elapsed / end})`;
   const index = timings.findIndex((time, i) => i > 0 && elapsed < time) - 1;
   const line = current.story[index < 0 ? current.story.length - 1 : index];
@@ -253,7 +254,9 @@ byId('activity').addEventListener('click', () => {
       experiment.innerHTML = `<svg viewBox="0 0 160 110" role="img" aria-label="Diagram of waves moving through layers of Mars"><defs><clipPath id="mars-disc"><circle cx="80" cy="55" r="49"/></clipPath></defs><circle cx="80" cy="55" r="49" fill="#a25b47"/><circle cx="80" cy="55" r="37" fill="#c98151"/><circle cx="80" cy="55" r="17" fill="#f4c377"/><g clip-path="url(#mars-disc)"><circle class="wave" cx="68" cy="30" r="40" fill="none" stroke="#fff6d8" stroke-width="2"/></g></svg><p>Illustration. Seismic waves let scientists infer where layers begin inside Mars.</p>`;
       break;
     case 'voyager':
+      playbackRequest++;
       audio.pause();
+      experiment.querySelector('audio')?.pause();
       experiment.innerHTML = `<audio controls preload="metadata" aria-label="Voyager 1 plasma wave playback" src="${base}audio/plasma.mp3"></audio><p>NASA/JPL-Caltech/University of Iowa · Plasma wave data played as audio.</p>`;
       experiment.querySelector('audio').muted = !sound;
       break;
