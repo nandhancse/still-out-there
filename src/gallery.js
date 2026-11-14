@@ -190,22 +190,21 @@ export function createGallery(container, exhibits, onFrame) {
         plate.scale.setScalar(station.trigger / trigger);
         label.position.y = Math.max(1.65, dimensions.y + standHeight + .42);
         label.visible = true;
-      }).catch(error => {
-        const texture = imageLoader.load(`${import.meta.env.BASE_URL}exhibits/${exhibit.id}.webp`, loaded => {
-          const height = exhibit.width * loaded.image.height / loaded.image.width;
-          fallback.scale.set(exhibit.width, height, 1);
-          fallback.position.y = height / 2 + .035;
-          fallback.visible = true;
-          label.position.y = height + .5;
-        });
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const fallback = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-          new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: .08, side: THREE.DoubleSide, toneMapped: false }));
-        fallback.visible = false;
-        group.add(fallback);
+      }).catch(async error => {
         label.visible = true;
-
-        console.error('Unable to load exhibit model', exhibit.id, error);
+        console.warn('Unable to load exhibit model', exhibit.id, error);
+        try {
+          const texture = await imageLoader.loadAsync(`${import.meta.env.BASE_URL}exhibits/${exhibit.id}.webp`);
+          texture.colorSpace = THREE.SRGBColorSpace;
+          const height = exhibit.width * texture.image.height / texture.image.width;
+          const fallback = new THREE.Mesh(new THREE.PlaneGeometry(exhibit.width, height),
+            new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: .08, side: THREE.DoubleSide, toneMapped: false }));
+          fallback.position.y = height / 2 + .035;
+          label.position.y = height + .5;
+          group.add(fallback);
+        } catch (error) {
+          console.warn('Unable to load exhibit image', exhibit.id, error);
+        }
       });
       return ready;
     };
