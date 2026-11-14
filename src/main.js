@@ -1,0 +1,232 @@
+import './style.css';
+import { exhibits } from './exhibits.js';
+import { createGallery } from './gallery.js';
+import { durations } from './narration.js';
+
+const byId = id => document.getElementById(id);
+const lobby = byId('lobby');
+const walk = byId('walk');
+const directory = byId('directory');
+const story = byId('story');
+const distancePanel = byId('distance');
+const caption = byId('caption');
+const experiment = byId('experiment');
+const progress = byId('story-fill');
+const base = import.meta.env.BASE_URL;
+const audio = new Audio();
+audio.id = 'narration';
+audio.hidden = true;
+document.body.append(audio);
+audio.preload = 'auto';
+const visited = new Set();
+const VIEW_RANGE = 6;
+const TRIGGER_RANGE = 1.85;
+let gallery;
+let inMuseum = false;
+let sound = true;
+let current;
+let storyStart = 0;
+let lastCaption;
+let animationId;
+let fullStory = false;
+let finished = false;
+
+function prepareAudio() {
+  // A short silent source gives touch browsers an explicit media interaction.
+  if (!audio.getAttribute('src')) {
+    audio.src = `${base}audio/enter.wav`;
+    audio.play().catch(() => {});
+  }
+}
+
+function toggleSound() {
+  sound = !sound;
+  audio.muted = !sound;
+  const sample = experiment.querySelector('audio');
+  if (sample) sample.muted = !sound;
+  for (const id of ['intro-sound', 'tour-sound']) {
+    byId(id).textContent = sound ? 'Sound on' : 'Sound off';
+    byId(id).setAttribute('aria-pressed', sound);
+  }
+  if (!sound) return;
+  if (!current || finished) {
+    if (!audio.getAttribute('src')) prepareAudio();
+  } else if (audio.paused) {
+    const elapsed = (performance.now() - storyStart) / 1000;
+    if (audio.readyState > 0) audio.currentTime = Math.min(audio.duration, elapsed);
+    audio.play().catch(() => {});
+  }
+}
+
+function stopStory() {
+  cancelAnimationFrame(animationId);
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  story.hidden = true;
+  experiment.hidden = true;
+  experiment.replaceChildren();
+  current = null;
+}
+
+function tickStory(now) {
+  if (!current) return;
+  const timings = durations[current.id];
+  const end = timings.at(-1);
+  const elapsed = Math.min(audio.currentTime > 0 && !audio.paused ? audio.currentTime : (now - storyStart) / 1000, end);
+  progress.style.transform = `scaleX(${elapsed / end})`;
+  const index = timings.findIndex((time, i) => i > 0 && elapsed < time) - 1;
+  const line = current.story[index < 0 ? current.story.length - 1 : index];
+  if (!fullStory && lastCaption !== line) {
+    caption.textContent = line;
+    lastCaption = line;
+  }
+  finished = elapsed >= end;
+  if (!finished) animationId = requestAnimationFrame(tickStory);
+}
+
+function playStory(exhibit) {
+  stopStory();
+  current = exhibit;
+  finished = false;
+  fullStory = false;
+  lastCaption = null;
+  visited.add(exhibit.id);
+  byId('visited-count').textContent = `${visited.size} / ${exhibits.length} explored`;
+  byId('story-tag').textContent = `${exhibit.place} · ${exhibit.year} · ${exhibit.status}`;
+  byId('story-title').textContent = exhibit.title;
+  byId('activity').textContent = exhibit.action;
+  byId('transcript').textContent = 'Full story';
+  byId('story-source').href = exhibit.source;
+  byId('story-meter').hidden = false;
+  story.hidden = false;
+  audio.src = `${base}audio/${exhibit.id}.mp3`;
+  audio.muted = !sound;
+  audio.play().catch(() => {});
+  storyStart = performance.now();
+  tickStory(storyStart);
+}
+
+function approach(exhibit, distance) {
+  distancePanel.hidden = distance > VIEW_RANGE;
+  if (distancePanel.hidden) return;
+  const rounded = `${distance.toFixed(1)} m`;
+  const progress = Math.min(1, Math.max(0, (VIEW_RANGE - distance) / (VIEW_RANGE - TRIGGER_RANGE)));
+  const name = byId('target-name');
+  const range = byId('target-range');
+  const hint = byId('distance-hint');
+  const heard = visited.has(exhibit.id);
+  const message = !heard ? 'Walk closer to hear the story' : current === exhibit ? 'Story unlocked' : 'Revisit from Exhibits';
+  if (name.textContent !== exhibit.name) name.textContent = exhibit.name;
+  if (range.textContent !== rounded) range.textContent = rounded;
+  if (hint.textContent !== message) hint.textContent = message;
+  byId('distance-fill').style.transform = `scaleX(${heard ? 1 : progress})`;
+  if (!heard && distance <= TRIGGER_RANGE) playStory(exhibit);
+}
+
+function enterMuseum() {
+  if (inMuseum) return;
+  if (!gallery) {
+    try {
+      gallery = createGallery(byId('scene'), exhibits, approach);
+    } catch (error) {
+      console.warn('3D gallery unavailable', error);
+      openDirectory();
+      return;
+    }
+  }
+  stopStory();
+  lobby.hidden = true;
+  walk.hidden = false;
+  inMuseum = true;
+  byId('control-hint').textContent = matchMedia('(pointer:coarse)').matches
+    ? 'Drag to look around'
+    : 'WASD to walk · Drag or click to look · Q/E to turn';
+  gallery.start();
+  document.activeElement?.blur();
+}
+
+function leaveMuseum() {
+  inMuseum = false;
+  gallery?.stop();
+  stopStory();
+  walk.hidden = true;
+  distancePanel.hidden = true;
+  lobby.hidden = false;
+  byId('enter').focus();
+}
+
+function openDirectory() {
+  if (directory.open) return;
+  gallery?.pause(true);
+  directory.showModal();
+}
+
+byId('enter').addEventListener('click', () => { prepareAudio(); enterMuseum(); });
+for (const id of ['intro-sound','tour-sound']) byId(id).addEventListener('click', toggleSound);
+byId('back').addEventListener('click', leaveMuseum);
+for (const id of ['open-exhibits','tour-exhibits']) byId(id).addEventListener('click', openDirectory);
+byId('close-directory').addEventListener('click', () => directory.close());
+directory.addEventListener('close', () => gallery?.pause(false));
+byId('close-story').addEventListener('click', stopStory);
+byId('replay').addEventListener('click', () => { if (current) playStory(current); });
+byId('transcript').addEventListener('click', () => {
+  fullStory = !fullStory;
+  byId('transcript').textContent = fullStory ? 'Show captions' : 'Full story';
+  if (fullStory) caption.textContent = current.story.join(' ');
+  else {
+    lastCaption = null;
+    cancelAnimationFrame(animationId);
+    tickStory(performance.now());
+  }
+});
+document.addEventListener('keydown', event => {
+  if (event.code === 'Tab' && document.pointerLockElement) gallery?.releasePointer();
+});
+for (const exhibit of exhibits) {
+  const item = document.createElement('button');
+  item.className = 'quiet directory-item';
+  item.type = 'button';
+  item.innerHTML = `<img alt="" src="${base}exhibits/${exhibit.id}.webp"><span><strong>${exhibit.name}</strong><span class="directory-detail">${exhibit.place} · ${exhibit.year}</span></span><span aria-hidden="true">↗</span>`;
+  item.addEventListener('click', () => {
+    directory.close();
+    if (!inMuseum) {
+      // The directory also offers a readable tour if a visitor skips the 3D room.
+      playStory(exhibit);
+    } else {
+      gallery.goTo(exhibit);
+      playStory(exhibit);
+    }
+  });
+  byId('exhibit-list').append(item);
+}
+
+byId('activity').addEventListener('click', () => {
+  if (!current) return;
+  experiment.hidden = false;
+  switch (current.id) {
+    case 'apollo11':
+      experiment.innerHTML = `<svg viewBox="0 0 280 62" role="img" aria-label="A light pulse travels from Earth to the Moon and back"><path d="M32 31H248" stroke="#a9b9d2" stroke-dasharray="4 4"/><circle cx="22" cy="31" r="14" fill="#417da8"/><circle cx="258" cy="31" r="10" fill="#d3c9bf"/><circle class="pulse" cx="32" cy="31" r="4" fill="#ffda80"/></svg><div role="status">Timing the round trip…</div>`;
+      {
+        const result = experiment.lastElementChild;
+        setTimeout(() => {
+          result.textContent = 'Example round trip: 2.56 s. One way: 1.28 s. At about 300,000 km/s, that is about 384,000 km.';
+        }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 2560);
+      }
+      break;
+    case 'apollo17':
+      experiment.innerHTML = `<p>Follow the tracks left during three trips across Taurus–Littrow.</p><a class="source" target="_blank" rel="noreferrer" href="${current.more}">Open NASA’s landing-site image ↗</a>`;
+      break;
+    case 'opportunity':
+      experiment.innerHTML = `<a href="${base}exhibits/berries.webp" target="_blank" rel="noreferrer"><img src="${base}exhibits/berries.webp" alt="Opportunity close-up of small round hematite-rich grains on the Martian surface"></a><p>Can you pick out the round grains? Tap the photo to take a closer look.</p>`;
+      break;
+    case 'insight':
+      experiment.innerHTML = `<svg viewBox="0 0 160 110" role="img" aria-label="Diagram of waves moving through layers of Mars"><defs><clipPath id="mars-disc"><circle cx="80" cy="55" r="49"/></clipPath></defs><circle cx="80" cy="55" r="49" fill="#a25b47"/><circle cx="80" cy="55" r="37" fill="#c98151"/><circle cx="80" cy="55" r="17" fill="#f4c377"/><g clip-path="url(#mars-disc)"><circle class="wave" cx="68" cy="30" r="40" fill="none" stroke="#fff6d8" stroke-width="2"/></g></svg><p>Illustration. Seismic waves let scientists infer where layers begin inside Mars.</p>`;
+      break;
+    case 'voyager':
+      audio.pause();
+      experiment.innerHTML = `<audio controls preload="metadata" aria-label="Voyager 1 plasma wave playback" src="${base}audio/plasma.mp3"></audio><p>NASA/JPL-Caltech/University of Iowa · Plasma wave data played as audio.</p>`;
+      experiment.querySelector('audio').muted = !sound;
+      break;
+  }
+});

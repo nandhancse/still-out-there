@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c1017">
+  <meta name="description" content="Walk through a virtual museum and hear five pieces of space history tell their stories.">
+  <title>Still Out There | A Walk Through Space History</title>
+</head>
+<body>
+  <div id="scene" aria-hidden="true"></div>
+  <main id="lobby">
+    <header class="masthead"><span class="wordmark"><i></i> STILL OUT THERE</span><span class="edition">NASA SPACE APPS CHALLENGE PROJECT</span></header>
+    <div class="opening">
+      <span class="overline"><i></i> A WALKABLE SPACE MUSEUM</span>
+      <h1>Still Out<br><em>There.</em></h1>
+      <p>Walk up to a piece of space history and hear what it helped us discover.</p>
+      <div class="entrance-actions">
+        <button class="primary" id="enter">Enter museum <span aria-hidden="true">→</span></button>
+        <button class="quiet" id="intro-sound" aria-pressed="true">Sound on</button>
+      </div>
+      <p class="entry-note">Five exhibits across the Moon, Mars and deep space.</p>
+    </div>
+    <footer class="lobby-footer"><span id="location-label">EARTH / MUSEUM ENTRANCE</span><button class="quiet" id="open-exhibits">Browse exhibits</button></footer>
+  </main>
+  <section id="walk" aria-label="Museum controls" hidden>
+    <header class="tour-header"><button class="quiet" id="back">Entrance</button><span id="visited-count">0 / 5 explored</span><div><button class="quiet" id="tour-sound" aria-pressed="true">Sound on</button><button class="quiet" id="tour-exhibits">Exhibits</button></div></header>
+    <div id="reticle" aria-hidden="true"></div>
+    <div id="distance" hidden><div class="distance-label"><strong id="target-name"></strong><span id="target-range"></span></div><div class="meter"><span id="distance-fill"></span></div><small id="distance-hint">Walk closer to hear the story</small></div>
+    <div class="touch-controls" aria-label="Touch movement">
+      <button data-move="KeyW" aria-label="Walk forward">↑</button><button data-move="KeyA" aria-label="Step left">←</button><button data-move="KeyS" aria-label="Walk backward">↓</button><button data-move="KeyD" aria-label="Step right">→</button>
+    </div>
+    <div class="control-hint" id="control-hint"></div>
+  </section>
+  <aside id="story" aria-label="Artifact story" hidden>
+    <div class="story-top"><span class="overline" id="story-tag"></span><button id="close-story" class="quiet" aria-label="Close story">Close</button></div>
+    <h2 id="story-title"></h2><p id="caption" aria-live="polite"></p>
+    <div class="meter" id="story-meter"><span id="story-fill"></span></div>
+    <div class="story-actions"><button class="quiet" id="replay">Replay</button><button class="quiet" id="transcript">Full story</button><button class="quiet" id="activity"></button></div>
+    <div class="experiment" id="experiment" hidden></div>
+    <a class="source" id="story-source" target="_blank" rel="noreferrer">Mission source →</a>
+  </aside>
+  <dialog id="directory">
+    <div class="story-top"><span class="overline">MUSEUM DIRECTORY</span><button id="close-directory" class="quiet" aria-label="Close directory">Close</button></div>
+    <h2>Choose an exhibit</h2>
+    <div id="exhibit-list"></div>
+    <a class="source" href="https://www.spaceappschallenge.org/2026/challenges/nasas-discarded-equipment-storytelling/" target="_blank" rel="noreferrer">2026 Space Apps challenge →</a>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
