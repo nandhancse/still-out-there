@@ -358,7 +358,7 @@ dialog::backdrop{background:#0a0a0bb3}
 .room-exit-door {
   border: 13px solid #1c222d;
   border-top: 10px solid #e0bf87;
-  background: #0a0f18 url('/exhibits/entrance.webp') 73% center / cover;
+  background: #030405;
 }
 .room-exit-panel {
   background: #3d444e;
