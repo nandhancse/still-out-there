@@ -40,14 +40,14 @@ export function createCssGallery(scene) {
     strip.position.set(0, 5.68, z);
   }
 
-  function station(group, exhibit, index) {
+  function station(group, exhibit) {
     const image = new Image();
     image.alt = '';
     const art = plane(group, exhibit.width, 1, 'room-exhibit', image);
     const header = document.createElement('div');
     header.className = 'room-art-label';
     const identity = document.createElement('small');
-    identity.textContent = `0${index + 1} / ${exhibit.place.toUpperCase()}`;
+    identity.textContent = `${exhibit.place} · ${exhibit.year}`;
     const name = document.createElement('p');
     name.textContent = exhibit.name;
     header.append(identity, name);

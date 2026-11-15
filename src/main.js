@@ -217,7 +217,7 @@ for (const exhibit of exhibits) {
   const item = document.createElement('button');
   item.className = 'quiet directory-item';
   item.type = 'button';
-  item.innerHTML = `<img alt="" src="${base}exhibits/${exhibit.id}.webp"><span><strong>${exhibit.name}</strong><span class="directory-detail">${exhibit.place} · ${exhibit.year}</span></span><span aria-hidden="true">↗</span>`;
+  item.innerHTML = `<img alt="" src="${base}exhibits/${exhibit.id}.webp"><span><strong>${exhibit.name}</strong><span class="directory-detail">${exhibit.place} · ${exhibit.year}</span></span>`;
   item.addEventListener('click', () => {
     directory.close();
     if (!inMuseum) {

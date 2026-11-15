@@ -99,10 +99,10 @@ export function createGallery(container, exhibits, onFrame) {
     const paint = canvas.getContext('2d');
     paint.textAlign = 'center';
     paint.fillStyle = tint;
-    paint.font = 'bold 29px Arial';
+    paint.font = '600 30px "Instrument Sans", Arial, sans-serif';
     paint.fillText(caption, 512, 90);
     paint.fillStyle = '#f3efe9';
-    paint.font = '54px Georgia';
+    paint.font = '600 54px "Instrument Sans", Arial, sans-serif';
     paint.fillText(title, 512, 159, 995);
     paint.fillStyle = tint;
     paint.fillRect(467, 199, 90, 3);
@@ -137,7 +137,7 @@ export function createGallery(container, exhibits, onFrame) {
   shadowCtx.fillRect(0, 0, 128, 128);
   const shadowTexture = new THREE.CanvasTexture(shadowCanvas);
 
-  const stations = exhibits.map((exhibit, index) => {
+  const stations = exhibits.map(exhibit => {
     const [x, z] = exhibit.position;
     const angle = x ? Math.sign(-x) * .47 : 0;
     const group = new THREE.Group();
@@ -145,10 +145,10 @@ export function createGallery(container, exhibits, onFrame) {
     group.rotation.y = angle;
     scene.add(group);
     if (css) {
-      const { focus } = css.station(group, exhibit, index);
+      const { focus } = css.station(group, exhibit);
       return { exhibit, group, radius: .84, trigger: FALLBACK_TRIGGER, focus };
     }
-    const label = plaque(exhibit.name, `0${index + 1}  /  ${exhibit.place.toUpperCase()}`, exhibit.color);
+    const label = plaque(exhibit.name, `${exhibit.place} · ${exhibit.year}`, exhibit.color);
     label.position.set(0, 2.45, .05);
     label.visible = false;
     group.add(label);
