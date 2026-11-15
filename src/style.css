@@ -321,18 +321,18 @@ dialog::backdrop{background:#0a0a0bb3}
 .room-exit-door {
   border: 13px solid #1c222d;
   border-top: 10px solid #e0bf87;
-  background: linear-gradient(90deg, #3b414c 49.5%, #1e2128 49.5% 50.5%, #343944 50.5%);
+  background: #0a0f18 url('/exhibits/entrance.webp') 73% center / cover;
+}
+.room-exit-panel {
+  background: #3d444e;
   box-shadow: inset 0 0 24px #171a21;
 }
-.room-exit-door::after {
-  content: '';
+.room-exit-handle {
   position: absolute;
   bottom: 27%;
-  left: calc(50% - 18px);
   width: 4px;
   height: 34px;
   background: #afa288;
-  box-shadow: 32px 0 #afa288;
 }
 .room-exit-sign {
   display: grid;

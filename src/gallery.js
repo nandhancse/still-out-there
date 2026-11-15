@@ -132,14 +132,32 @@ export function createGallery(container, exhibits, onFrame) {
   door.position.copy(EXIT);
   door.rotation.y = Math.PI;
   scene.add(door);
+  const doorLeaves = [-1, 1].map(side => {
+    const hinge = new THREE.Group();
+    hinge.position.set(side * 1.18, 0, .1);
+    door.add(hinge);
+    return { side, hinge };
+  });
+  function setDoorOpen(amount) {
+    for (const { side, hinge } of doorLeaves) hinge.rotation.y = side * 1.38 * amount;
+  }
   if (css) {
-    css.exitDoor(door);
+    css.exitDoor(door, doorLeaves);
   } else {
     const doorPanel = new THREE.MeshStandardMaterial({ color: '#434951', roughness: .55, metalness: .35 });
-    makeBox(2.65, 3.12, .14, 0, 1.56, 0, materials.column, door);
-    for (const side of [-1, 1]) {
-      makeBox(1.16, 2.86, .12, side * .6, 1.44, .08, doorPanel, door);
-      makeBox(.032, .36, .055, side * .16, 1.18, .17, materials.trim, door);
+    const space = imageLoader.load(`${import.meta.env.BASE_URL}exhibits/entrance.webp`);
+    space.colorSpace = THREE.SRGBColorSpace;
+    space.repeat.set(.47, 1);
+    space.offset.set(.4, 0);
+    const opening = new THREE.Mesh(new THREE.PlaneGeometry(2.38, 2.86),
+      new THREE.MeshBasicMaterial({ map: space, toneMapped: false }));
+    opening.position.set(0, 1.44, .015);
+    door.add(opening);
+    makeBox(2.65, .25, .17, 0, 2.995, .02, materials.column, door);
+    for (const { side, hinge } of doorLeaves) {
+      makeBox(.14, 2.91, .17, side * 1.255, 1.455, .02, materials.column, door);
+      makeBox(1.16, 2.86, .11, -side * .58, 1.44, 0, doorPanel, hinge);
+      makeBox(.032, .36, .055, -side * 1.02, 1.18, .08, materials.trim, hinge);
     }
     makeBox(2.35, .034, .06, 0, 2.94, .16, warm, door);
     makeBox(2.44, .027, .17, 0, .014, .08, materials.trim, door);
@@ -365,6 +383,7 @@ export function createGallery(container, exhibits, onFrame) {
     stop() {
       active = false; blocked = false;
       clearMovement(); placeAtEntrance(); container.classList.remove('inside');
+      setDoorOpen(0);
     },
     pause(value) { blocked = value; if (value) clearMovement(); },
     releasePointer: clearMovement,
@@ -372,6 +391,22 @@ export function createGallery(container, exhibits, onFrame) {
       camera.position.set(EXIT.x, START.y, EXIT.z - (EXIT_RANGE - .35));
       camera.lookAt(EXIT.x, 1.85, EXIT.z);
       clearMovement();
+    },
+    openExit() {
+      blocked = true;
+      clearMovement();
+      camera.lookAt(EXIT.x, 1.85, EXIT.z);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
+      return new Promise(resolve => {
+        const start = performance.now();
+        function animate(now) {
+          const progress = Math.min((now - start) / 620, 1);
+          setDoorOpen(1 - (1 - progress) ** 3);
+          if (progress < 1) requestAnimationFrame(animate);
+          else resolve();
+        }
+        requestAnimationFrame(animate);
+      });
     },
     goTo(exhibit) {
       const [x, z] = exhibit.position;

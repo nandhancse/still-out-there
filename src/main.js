@@ -182,12 +182,15 @@ async function enterMuseum() {
   else document.activeElement?.blur();
 }
 
-function showCredits() {
+async function showCredits() {
+  exitMuseum.hidden = true;
+  walk.inert = true;
+  stopStory();
+  await gallery.openExit();
   inMuseum = false;
   gallery.stop();
-  stopStory();
   walk.hidden = true;
-  exitMuseum.hidden = true;
+  walk.inert = false;
   distancePanel.hidden = true;
   byId('credits-progress').textContent = `You explored ${visited.size} of ${exhibits.length} exhibits.`;
   credits.hidden = false;

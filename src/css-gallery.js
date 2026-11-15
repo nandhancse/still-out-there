@@ -40,9 +40,16 @@ export function createCssGallery(scene) {
     strip.position.set(0, 5.68, z);
   }
 
-  function exitDoor(group) {
+  function exitDoor(group, leaves) {
     const door = plane(group, 2.65, 3.12, 'room-exit-door');
     door.position.y = 1.56;
+    for (const { side, hinge } of leaves) {
+      const handle = document.createElement('span');
+      handle.className = 'room-exit-handle';
+      handle.style[side < 0 ? 'right' : 'left'] = '14px';
+      const panel = plane(hinge, 1.16, 2.86, 'room-exit-panel', handle);
+      panel.position.set(-side * .58, 1.44, .003);
+    }
     const title = document.createElement('span');
     title.textContent = 'Exit';
     const sign = plane(group, 2.4, .4, 'room-exit-sign', title);
