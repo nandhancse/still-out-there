@@ -6,6 +6,7 @@ const byId = id => document.getElementById(id);
 const lobby = byId('lobby');
 const walk = byId('walk');
 const directory = byId('directory');
+const controls = byId('controls');
 const story = byId('story');
 const distancePanel = byId('distance');
 const caption = byId('caption');
@@ -20,6 +21,10 @@ document.body.append(audio);
 audio.preload = 'auto';
 const visited = new Set();
 const VIEW_RANGE = 6;
+const CONTROLS_SEEN_KEY = 'still-out-there-controls-seen';
+let controlsSeen = false;
+try { controlsSeen = localStorage.getItem(CONTROLS_SEEN_KEY) === '1'; }
+catch { /* The guide can still be dismissed for this visit. */ }
 let gallery;
 let inMuseum = false;
 let entering = false;
@@ -168,12 +173,10 @@ async function enterMuseum() {
   lobby.hidden = true;
   walk.hidden = false;
   inMuseum = true;
-  byId('control-hint').textContent = matchMedia('(pointer:coarse)').matches
-    ? 'Drag to look around'
-    : 'WASD to walk · Drag or click to look · Q/E to turn';
   gallery.pause(false);
   gallery.start();
-  document.activeElement?.blur();
+  if (!controlsSeen) openMuseumDialog(controls);
+  else document.activeElement?.blur();
 }
 
 function leaveMuseum() {
@@ -187,9 +190,13 @@ function leaveMuseum() {
 }
 
 function openDirectory() {
-  if (directory.open) return;
+  openMuseumDialog(directory);
+}
+
+function openMuseumDialog(dialog) {
+  if (dialog.open) return;
   gallery?.pause(true);
-  directory.showModal();
+  dialog.showModal();
 }
 
 byId('enter').addEventListener('click', enterMuseum);
@@ -197,7 +204,16 @@ for (const id of ['intro-sound','tour-sound']) byId(id).addEventListener('click'
 byId('back').addEventListener('click', leaveMuseum);
 for (const id of ['open-exhibits','tour-exhibits']) byId(id).addEventListener('click', openDirectory);
 byId('close-directory').addEventListener('click', () => directory.close());
-directory.addEventListener('close', () => gallery?.pause(false));
+byId('open-controls').addEventListener('click', () => openMuseumDialog(controls));
+for (const dialog of [directory, controls]) {
+  dialog.addEventListener('close', () => gallery?.pause(directory.open || controls.open));
+}
+controls.addEventListener('close', () => {
+  controlsSeen = true;
+  try { localStorage.setItem(CONTROLS_SEEN_KEY, '1'); }
+  catch { /* The in-memory setting still applies. */ }
+  if (inMuseum) byId('open-controls').focus({ preventScroll: true });
+});
 byId('close-story').addEventListener('click', stopStory);
 byId('replay').addEventListener('click', () => { if (current) playStory(current); });
 byId('transcript').addEventListener('click', () => {

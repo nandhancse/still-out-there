@@ -43,7 +43,7 @@
     <div class="touch-controls" aria-label="Touch movement">
       <button data-move="KeyW" aria-label="Walk forward">↑</button><button data-move="KeyA" aria-label="Step left">←</button><button data-move="KeyS" aria-label="Walk backward">↓</button><button data-move="KeyD" aria-label="Step right">→</button>
     </div>
-    <div class="control-hint" id="control-hint"></div>
+    <button class="quiet controls-button" id="open-controls" aria-haspopup="dialog" aria-controls="controls">Controls</button>
   </section>
   <aside id="story" aria-label="Artifact story" hidden>
     <div class="story-top"><span class="overline" id="story-tag"></span><button id="close-story" class="quiet" aria-label="Close story">Close</button></div>
@@ -58,6 +58,20 @@
     <div class="story-top"><h2 id="directory-title">Exhibits</h2><button id="close-directory" class="quiet" aria-label="Close directory">Close</button></div>
     <div id="exhibit-list"></div>
     <a class="source" href="https://www.spaceappschallenge.org/2026/challenges/nasas-discarded-equipment-storytelling/" target="_blank" rel="noreferrer">2026 Space Apps challenge →</a>
+  </dialog>
+  <dialog id="controls" aria-labelledby="controls-title">
+    <h2 id="controls-title">How to explore</h2>
+    <dl class="controls-list">
+      <dt>Move</dt>
+      <dd class="desktop-instruction">Use <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys to walk.</dd>
+      <dd class="touch-instruction">Hold the on-screen arrow buttons to walk.</dd>
+      <dt>Look around</dt>
+      <dd class="desktop-instruction">Drag the room to look around, or click it once and move the mouse. Press <kbd>Esc</kbd> to free the cursor. <kbd>Q</kbd> and <kbd>E</kbd> turn left and right.</dd>
+      <dd class="touch-instruction">Drag the room with one finger to look around.</dd>
+      <dt>Hear a story</dt>
+      <dd>Walk up to an exhibit to start its narration. Use <strong>Exhibits</strong> to go straight to any artifact.</dd>
+    </dl>
+    <form method="dialog"><button class="primary" autofocus>Explore museum</button></form>
   </dialog>
   <script type="module" src="/src/main.js"></script>
 </body>
