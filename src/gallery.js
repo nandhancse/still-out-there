@@ -3,6 +3,8 @@ import { createCssGallery } from './css-gallery.js';
 import { loadArtifact } from './artifact-models.js';
 
 const START = new THREE.Vector3(-4.6, 1.62, 7.6);
+const EXIT = new THREE.Vector3(START.x, 0, 13.72);
+const EXIT_RANGE = 3.45;
 const STORY_CLEARANCE = 1.10;
 const FALLBACK_TRIGGER = 1.85;
 const MAX_PITCH = Math.PI * 0.39;
@@ -40,10 +42,10 @@ export function createGallery(container, exhibits, onFrame) {
     trim: new THREE.MeshStandardMaterial({ color: '#625744', roughness: .68, metalness: .25 }),
     ceiling: new THREE.MeshStandardMaterial({ color: '#202530', roughness: .9 })
   };
-  const makeBox = (w, h, d, x, y, z, mat) => {
+  const makeBox = (w, h, d, x, y, z, mat, parent = scene) => {
     const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     box.position.set(x, y, z);
-    scene.add(box);
+    parent.add(box);
     return box;
   };
   const warm = new THREE.MeshBasicMaterial({ color: '#ffd39a' });
@@ -125,6 +127,27 @@ export function createGallery(container, exhibits, onFrame) {
   backSign.scale.setScalar(1.6);
   backSign.position.set(0, 4.3, -18.8);
   scene.add(backSign);
+
+  const door = new THREE.Group();
+  door.position.copy(EXIT);
+  door.rotation.y = Math.PI;
+  scene.add(door);
+  if (css) {
+    css.exitDoor(door);
+  } else {
+    const doorPanel = new THREE.MeshStandardMaterial({ color: '#434951', roughness: .55, metalness: .35 });
+    makeBox(2.65, 3.12, .14, 0, 1.56, 0, materials.column, door);
+    for (const side of [-1, 1]) {
+      makeBox(1.16, 2.86, .12, side * .6, 1.44, .08, doorPanel, door);
+      makeBox(.032, .36, .055, side * .16, 1.18, .17, materials.trim, door);
+    }
+    makeBox(2.35, .034, .06, 0, 2.94, .16, warm, door);
+    makeBox(2.44, .027, .17, 0, .014, .08, materials.trim, door);
+    const sign = plaque('Exit', '', '#f0d4a1');
+    sign.scale.setScalar(.72);
+    sign.position.set(0, 3.36, .11);
+    door.add(sign);
+  }
 
   const shadowCanvas = document.createElement('canvas');
   shadowCanvas.width = shadowCanvas.height = 128;
@@ -319,7 +342,8 @@ export function createGallery(container, exhibits, onFrame) {
         station.focus(focused);
         if (station.label) station.label.quaternion.copy(station.group.quaternion).invert().multiply(camera.quaternion);
       }
-      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius);
+      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius,
+        horizontalDistance(camera.position, EXIT) <= EXIT_RANGE);
     }
     renderer.render(scene, camera);
   }
@@ -344,6 +368,11 @@ export function createGallery(container, exhibits, onFrame) {
     },
     pause(value) { blocked = value; if (value) clearMovement(); },
     releasePointer: clearMovement,
+    goToExit() {
+      camera.position.set(EXIT.x, START.y, EXIT.z - (EXIT_RANGE - .35));
+      camera.lookAt(EXIT.x, 1.85, EXIT.z);
+      clearMovement();
+    },
     goTo(exhibit) {
       const [x, z] = exhibit.position;
       const station = stations.find(item => item.exhibit === exhibit);

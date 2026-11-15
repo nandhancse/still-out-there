@@ -140,6 +140,7 @@ h2{font-weight:600}
 .distance-label{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px}
 #target-range,#distance small{color:#bbbfc8;font-size:11px;white-space:nowrap}
 #distance .meter{margin:9px 0 4px}
+#exit-museum{position:absolute;top:15%;left:50%;transform:translateX(-50%);white-space:nowrap}
 .meter{height:3px;background:#d3c9b132;border-radius:3px;overflow:hidden}
 .meter span{height:100%;width:100%;display:block;transform-origin:left;transform:scaleX(0);background:var(--cream)}
 .controls-button{position:absolute;left:20px;bottom:18px;min-height:44px}
@@ -186,6 +187,48 @@ dialog::backdrop{background:#0a0a0bb3}
   color: #f4f3ef;
   font: inherit;
   font-weight: 600;
+}
+#credits {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #101214;
+}
+.credits-inner {
+  width: min(1050px, calc(100% - 40px));
+  margin-inline: auto;
+  padding-block: clamp(20px, 5vw, 64px);
+}
+.credits-hero {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(22px, 6vw, 70px);
+  padding-bottom: max(68px, 6vw);
+  border: 1px solid var(--line);
+  background: linear-gradient(90deg, #0b0e12ee, #0b0e1299 42%, #0b0e1230),
+    url('/exhibits/entrance.webp') 72% 49% / cover;
+}
+#credits-title {
+  max-width: 9ch;
+  margin: 0;
+  font-size: clamp(49px, 8.1vw, 102px);
+  font-weight: 650;
+  line-height: .98;
+  letter-spacing: -.058em;
+}
+#credits-title:focus{outline:none}
+#credits-progress{margin:14px 0 22px;color:#dad9d5;font-size:16px}
+.credits-image-credit {
+  position: absolute;
+  inset: auto 18px 14px auto;
+  color: #deddd8;
+  font-size: 11px;
+  text-underline-offset: 3px;
 }
 .touch-instruction{display:none}
 #directory-title{margin:0}
@@ -241,3 +284,26 @@ dialog::backdrop{background:#0a0a0bb3}
 .room-pool{background:radial-gradient(ellipse at 50% 50%,#070a12bd 5%,#070a1244 31%,transparent 57%),radial-gradient(ellipse at center,color-mix(in srgb,var(--exhibit-color),transparent 71%),transparent 68%)}
 .room-range{border-radius:50%;border:4px solid transparent;border-bottom-color:var(--exhibit-color);opacity:.42}
 .room-range.lit{opacity:1}
+.room-exit-door {
+  border: 13px solid #1c222d;
+  border-top: 10px solid #e0bf87;
+  background: linear-gradient(90deg, #3b414c 49.5%, #1e2128 49.5% 50.5%, #343944 50.5%);
+  box-shadow: inset 0 0 24px #171a21;
+}
+.room-exit-door::after {
+  content: '';
+  position: absolute;
+  bottom: 27%;
+  left: calc(50% - 18px);
+  width: 4px;
+  height: 34px;
+  background: #afa288;
+  box-shadow: 32px 0 #afa288;
+}
+.room-exit-sign {
+  display: grid;
+  place-items: center;
+  color: #f3e7d0;
+  font-size: 30px;
+  font-weight: 650;
+}

@@ -40,6 +40,15 @@ export function createCssGallery(scene) {
     strip.position.set(0, 5.68, z);
   }
 
+  function exitDoor(group) {
+    const door = plane(group, 2.65, 3.12, 'room-exit-door');
+    door.position.y = 1.56;
+    const title = document.createElement('span');
+    title.textContent = 'Exit';
+    const sign = plane(group, 2.4, .4, 'room-exit-sign', title);
+    sign.position.set(0, 3.36, .02);
+  }
+
   function station(group, exhibit) {
     const image = new Image();
     image.alt = '';
@@ -71,5 +80,5 @@ export function createCssGallery(scene) {
     image.src = `${import.meta.env.BASE_URL}exhibits/${exhibit.id}.webp`;
     return { focus: value => { marker.element.classList.toggle('lit', value); } };
   }
-  return { adapter, station };
+  return { adapter, station, exitDoor };
 }

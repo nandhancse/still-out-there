@@ -37,13 +37,24 @@
     </div>
   </main>
   <section id="walk" aria-label="Museum controls" hidden>
-    <header class="tour-header"><button class="quiet" id="back">Entrance</button><span id="visited-count">0 / 5 explored</span><div><button class="quiet" id="tour-sound" aria-pressed="true">Sound on</button><button class="quiet" id="tour-exhibits">Exhibits</button></div></header>
+    <header class="tour-header"><button class="quiet" id="to-exit">Exit door</button><span id="visited-count">0 / 5 explored</span><div><button class="quiet" id="tour-sound" aria-pressed="true">Sound on</button><button class="quiet" id="tour-exhibits">Exhibits</button></div></header>
     <div id="reticle" aria-hidden="true"></div>
     <div id="distance" hidden><div class="distance-label"><strong id="target-name"></strong><span id="target-range"></span></div><div class="meter"><span id="distance-fill"></span></div><small id="distance-hint">Walk closer to hear the story</small></div>
+    <button class="primary" id="exit-museum" hidden>View credits <span aria-hidden="true">→</span></button>
     <div class="touch-controls" aria-label="Touch movement">
       <button data-move="KeyW" aria-label="Walk forward">↑</button><button data-move="KeyA" aria-label="Step left">←</button><button data-move="KeyS" aria-label="Walk backward">↓</button><button data-move="KeyD" aria-label="Step right">→</button>
     </div>
     <button class="quiet controls-button" id="open-controls" aria-haspopup="dialog" aria-controls="controls">Controls</button>
+  </section>
+  <section id="credits" aria-labelledby="credits-title" hidden>
+    <div class="credits-inner">
+      <header class="credits-hero">
+        <a href="https://science.nasa.gov/image-detail/pia17462/" class="credits-image-credit" target="_blank" rel="noreferrer">Voyager illustration · NASA/JPL-Caltech</a>
+        <h1 id="credits-title" tabindex="-1">Still Out There</h1>
+        <p id="credits-progress"></p>
+        <button class="quiet" id="credits-return">Return to entrance</button>
+      </header>
+    </div>
   </section>
   <aside id="story" aria-label="Artifact story" hidden>
     <div class="story-top"><span class="overline" id="story-tag"></span><button id="close-story" class="quiet" aria-label="Close story">Close</button></div>
