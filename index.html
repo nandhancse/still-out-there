@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#191a1b">
+  <meta name="theme-color" content="#0a0f18">
   <meta name="description" content="Walk through a virtual museum and hear five pieces of space history tell their stories.">
   <title>Still Out There | A Walk Through Space History</title>
 </head>
 <body>
   <div id="scene" aria-hidden="true"></div>
   <main id="lobby">
+    <img class="lobby-backdrop" src="./exhibits/entrance.webp" width="2000" height="1125" alt="" fetchpriority="high">
     <div class="lobby-inner">
       <header class="lobby-header">
         <span>NASA Space Apps Challenge project</span>
@@ -17,23 +18,17 @@
       </header>
       <div class="lobby-exhibition">
         <div class="opening">
-          <h1>Still Out<br>There</h1>
+          <h1>Still Out<br><em>There.</em></h1>
           <p>Explore five artifacts from the Moon, Mars, and interstellar space. Walk up to each exhibit to hear its story.</p>
           <div class="entrance-actions">
             <button class="primary" id="enter"><span id="enter-label">Enter museum</span> <span aria-hidden="true">→</span></button>
             <button class="browse-button" id="open-exhibits">Browse exhibits</button>
           </div>
         </div>
-        <figure class="voyager-figure">
-          <div class="voyager-image">
-            <img src="./exhibits/entrance.webp" width="2000" height="1125" alt="A Voyager spacecraft with its white dish antenna facing a field of stars." fetchpriority="high">
-          </div>
-          <figcaption>
-            <span><strong>Voyager in deep space</strong> <span class="image-type">Artist’s concept</span></span>
-            <a href="https://science.nasa.gov/image-detail/pia17462/" target="_blank" rel="noreferrer">NASA/JPL-Caltech</a>
-          </figcaption>
-        </figure>
       </div>
+      <footer class="lobby-footer">
+        <a href="https://science.nasa.gov/image-detail/pia17462/" target="_blank" rel="noreferrer">Voyager illustration · NASA/JPL-Caltech</a>
+      </footer>
     </div>
   </main>
   <section id="walk" aria-label="Museum controls" hidden>
@@ -73,6 +68,10 @@
           <li><a href="https://github.com/hexgrad/kokoro" target="_blank" rel="noreferrer">Kokoro narration</a></li>
         </ul>
       </section>
+      <footer class="credits-team">
+        <p>Created by</p>
+        <h2>Leo Space</h2>
+      </footer>
     </div>
   </section>
   <aside id="story" aria-label="Artifact story" hidden>
