@@ -16,6 +16,7 @@ const caption = byId('caption');
 const experiment = byId('experiment');
 const progress = byId('story-fill');
 const audioNotice = byId('audio-notice');
+const pauseButton = byId('pause-story');
 const base = import.meta.env.BASE_URL;
 const audio = new Audio();
 audio.id = 'narration';
@@ -24,12 +25,16 @@ document.body.append(audio);
 audio.preload = 'auto';
 const visited = new Set();
 const VIEW_RANGE = 6;
+const RETURN_CLEARANCE = .35;
 let gallery;
 let inMuseum = false;
 let entering = false;
 let sound = true;
 let current;
+let proximityExhibit;
 let storyStart = 0;
+let storyElapsed = 0;
+let storyPaused = false;
 let lastCaption;
 let animationId;
 let fullStory = false;
@@ -54,13 +59,11 @@ function toggleSound() {
     byId(id).setAttribute('aria-pressed', sound);
   }
   audioNotice.hidden = true;
-  if (!sound || sample) return;
+  if (!sound || sample || storyPaused) return;
   if (!current || finished) {
     if (!audio.getAttribute('src')) prepareAudio();
   } else if (audio.paused) {
-    const elapsed = (performance.now() - storyStart) / 1000;
-    if (audio.readyState > 0) audio.currentTime = Math.min(audio.duration, elapsed);
-    playNarration();
+    playNarration(elapsedAt(performance.now(), durations[current.id].at(-1)));
   }
 }
 
@@ -76,7 +79,11 @@ function stopStory() {
   current = null;
 }
 
-function playNarration() {
+function playNarration(position) {
+  if (position !== undefined) {
+    audio.currentTime = Number.isFinite(audio.duration) ? Math.min(audio.duration, position) : position;
+  }
+  audioNotice.hidden = true;
   const request = ++playbackRequest;
   audio.play().catch(error => {
     if (request !== playbackRequest || !current || !sound || error.name === 'AbortError') return;
@@ -87,25 +94,61 @@ function playNarration() {
   });
 }
 
+function elapsedAt(now, end) {
+  if (audio.ended) return end;
+  const time = audio.paused ? (now - storyStart) / 1000 : audio.currentTime;
+  return Math.max(0, Math.min(time, end));
+}
+
 function tickStory(now) {
   if (!current) return;
   const timings = durations[current.id];
   const end = timings.at(-1);
-  const elapsed = audio.ended ? end : Math.min(audio.paused ? (now - storyStart) / 1000 : audio.currentTime, end);
-  progress.style.transform = `scaleX(${elapsed / end})`;
-  const index = timings.findIndex((time, i) => i > 0 && elapsed < time) - 1;
+  if (!storyPaused) storyElapsed = elapsedAt(now, end);
+  progress.style.transform = `scaleX(${storyElapsed / end})`;
+  const index = timings.findIndex((time, i) => i > 0 && storyElapsed < time) - 1;
   const line = current.story[index < 0 ? current.story.length - 1 : index];
   if (!fullStory && lastCaption !== line) {
     caption.textContent = line;
     lastCaption = line;
   }
-  finished = elapsed >= end;
-  if (!finished) animationId = requestAnimationFrame(tickStory);
+  finished = storyElapsed >= end;
+  if (finished) pauseButton.disabled = true;
+  if (!storyPaused && !finished) animationId = requestAnimationFrame(tickStory);
+}
+
+function pauseNarration() {
+  if (!current || finished || storyPaused) return;
+  const now = performance.now();
+  storyElapsed = elapsedAt(now, durations[current.id].at(-1));
+  storyPaused = true;
+  playbackRequest++;
+  audio.pause();
+  cancelAnimationFrame(animationId);
+  pauseButton.textContent = 'Resume';
+  tickStory(now);
+}
+
+function toggleNarrationPause() {
+  if (!current || finished) return;
+  if (!storyPaused) {
+    pauseNarration();
+    return;
+  }
+  experiment.querySelector('audio')?.pause();
+  storyPaused = false;
+  pauseButton.textContent = 'Pause';
+  const now = performance.now();
+  storyStart = now - storyElapsed * 1000;
+  playNarration(storyElapsed);
+  tickStory(now);
 }
 
 function playStory(exhibit) {
   stopStory();
   current = exhibit;
+  storyPaused = false;
+  storyElapsed = 0;
   finished = false;
   fullStory = false;
   lastCaption = null;
@@ -114,14 +157,16 @@ function playStory(exhibit) {
   byId('story-tag').textContent = `${exhibit.place} · ${exhibit.year} · ${exhibit.status}`;
   byId('story-title').textContent = exhibit.title;
   byId('activity').textContent = exhibit.action;
+  pauseButton.textContent = 'Pause';
+  pauseButton.disabled = false;
   byId('transcript').textContent = 'Full story';
   byId('story-source').href = exhibit.source;
   byId('story-meter').hidden = false;
   story.hidden = false;
   audio.src = `${base}audio/${exhibit.id}.mp3`;
   audio.muted = !sound;
-  playNarration();
   storyStart = performance.now();
+  playNarration();
   tickStory(storyStart);
 }
 
@@ -131,6 +176,11 @@ function approach(exhibit, distance, triggerRange, nearExit) {
     return;
   }
   distance = Math.max(0, distance);
+  if (proximityExhibit !== exhibit || distance > triggerRange + RETURN_CLEARANCE) proximityExhibit = undefined;
+  if (!proximityExhibit && distance <= triggerRange) {
+    proximityExhibit = exhibit;
+    playStory(exhibit);
+  }
   distancePanel.hidden = distance > VIEW_RANGE;
   if (distancePanel.hidden) return;
   const rounded = `${distance.toFixed(1)} m`;
@@ -138,13 +188,12 @@ function approach(exhibit, distance, triggerRange, nearExit) {
   const name = byId('target-name');
   const range = byId('target-range');
   const hint = byId('distance-hint');
-  const heard = visited.has(exhibit.id);
-  const message = !heard ? 'Walk closer to hear the story' : current === exhibit ? 'Story unlocked' : 'Revisit from Exhibits';
+  const inProximity = proximityExhibit === exhibit;
+  const message = inProximity ? 'Story unlocked' : 'Walk closer to hear the story';
   if (name.textContent !== exhibit.name) name.textContent = exhibit.name;
   if (range.textContent !== rounded) range.textContent = rounded;
   if (hint.textContent !== message) hint.textContent = message;
-  byId('distance-fill').style.transform = `scaleX(${heard ? 1 : progress})`;
-  if (!heard && distance <= triggerRange) playStory(exhibit);
+  byId('distance-fill').style.transform = `scaleX(${inProximity ? 1 : progress})`;
 }
 
 async function enterMuseum() {
@@ -176,6 +225,7 @@ async function enterMuseum() {
   lobby.hidden = true;
   walk.hidden = false;
   inMuseum = true;
+  proximityExhibit = undefined;
   gallery.start();
   openMuseumDialog(controls);
 }
@@ -225,6 +275,7 @@ controls.addEventListener('close', () => {
   if (inMuseum) byId('open-controls').focus({ preventScroll: true });
 });
 byId('close-story').addEventListener('click', stopStory);
+pauseButton.addEventListener('click', toggleNarrationPause);
 byId('replay').addEventListener('click', () => { if (current) playStory(current); });
 byId('transcript').addEventListener('click', () => {
   fullStory = !fullStory;
@@ -246,13 +297,11 @@ for (const exhibit of exhibits) {
   item.innerHTML = `<img alt="" src="${base}exhibits/${exhibit.id}.webp"><span><strong>${exhibit.name}</strong><span class="directory-detail">${exhibit.place} · ${exhibit.year}</span></span>`;
   item.addEventListener('click', () => {
     directory.close();
-    if (!inMuseum) {
-      // The directory also offers a readable tour if a visitor skips the 3D room.
-      playStory(exhibit);
-    } else {
+    if (inMuseum) {
       gallery.goTo(exhibit);
-      playStory(exhibit);
+      proximityExhibit = exhibit;
     }
+    playStory(exhibit);
   });
   byId('exhibit-list').append(item);
 
@@ -297,11 +346,14 @@ byId('activity').addEventListener('click', () => {
       experiment.innerHTML = `<svg viewBox="0 0 160 110" role="img" aria-label="Diagram of waves moving through layers of Mars"><defs><clipPath id="mars-disc"><circle cx="80" cy="55" r="49"/></clipPath></defs><circle cx="80" cy="55" r="49" fill="#a25b47"/><circle cx="80" cy="55" r="37" fill="#c98151"/><circle cx="80" cy="55" r="17" fill="#f4c377"/><g clip-path="url(#mars-disc)"><circle class="wave" cx="68" cy="30" r="40" fill="none" stroke="#fff6d8" stroke-width="2"/></g></svg><p>Illustration. Seismic waves let scientists infer where layers begin inside Mars.</p>`;
       break;
     case 'voyager':
-      playbackRequest++;
-      audio.pause();
+      pauseNarration();
       experiment.querySelector('audio')?.pause();
       experiment.innerHTML = `<audio controls preload="metadata" aria-label="Voyager 1 plasma wave playback" src="${base}audio/plasma.mp3"></audio><p>NASA/JPL-Caltech/University of Iowa · Plasma wave data played as audio.</p>`;
-      experiment.querySelector('audio').muted = !sound;
+      {
+        const sample = experiment.querySelector('audio');
+        sample.muted = !sound;
+        sample.addEventListener('play', pauseNarration);
+      }
       break;
   }
 });

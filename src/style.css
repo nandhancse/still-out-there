@@ -145,6 +145,7 @@ h2{font-size:clamp(25px,3vw,37px);line-height:1.05;letter-spacing:-.035em;margin
 #audio-notice{color:var(--cream);font-size:12px;margin:0 0 10px}
 .story-actions{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0 10px}
 .story-actions .quiet{min-height:35px}
+.story-actions .quiet:disabled{cursor:default;opacity:.55}
 .source{color:#ecd6a8;font-size:11px;text-underline-offset:3px}
 .experiment{background:#18191a;border:1px solid var(--line);padding:10px;border-radius:3px;margin-bottom:10px;font-size:13px;line-height:1.4}
 .experiment img,.experiment svg{width:100%;display:block;border-radius:3px}
@@ -358,7 +359,7 @@ dialog::backdrop{background:#0a0a0bb3}
 .room-exit-door {
   border: 13px solid #1c222d;
   border-top: 10px solid #e0bf87;
-  background: #0a0f18 url('/exhibits/entrance.webp') 73% center / cover;
+  background: #030405;
 }
 .room-exit-panel {
   background: #3d444e;

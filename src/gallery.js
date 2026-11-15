@@ -166,12 +166,8 @@ export function createGallery(container, exhibits, onFrame, onExit) {
     css.exitDoor(door, doorLeaves, exitSign);
   } else {
     const doorPanel = new THREE.MeshStandardMaterial({ color: '#434951', roughness: .55, metalness: .35 });
-    const space = imageLoader.load(`${import.meta.env.BASE_URL}exhibits/entrance.webp`);
-    space.colorSpace = THREE.SRGBColorSpace;
-    space.repeat.set(.47, 1);
-    space.offset.set(.4, 0);
     const opening = new THREE.Mesh(new THREE.PlaneGeometry(2.38, 2.86),
-      new THREE.MeshBasicMaterial({ map: space, toneMapped: false }));
+      new THREE.MeshBasicMaterial({ color: '#030405', toneMapped: false }));
     opening.position.set(0, 1.44, .015);
     door.add(opening);
     makeBox(2.65, .25, .17, 0, 2.995, .02, materials.column, door);
