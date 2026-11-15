@@ -264,6 +264,23 @@ for (const exhibit of exhibits) {
     }
   });
   byId('exhibit-list').append(item);
+
+  const row = document.createElement('div');
+  const name = document.createElement('dt');
+  name.textContent = exhibit.name;
+  const links = document.createElement('dd');
+  const resources = [[exhibit.id === 'voyager' ? 'Plasma-wave audio and mission source' : 'Mission source', exhibit.source], ...exhibit.references];
+  if (exhibit.more) resources.push(['NASA landing-site image', exhibit.more]);
+  for (const [label, url] of resources) {
+    const link = document.createElement('a');
+    link.textContent = label;
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noreferrer';
+    links.append(link);
+  }
+  row.append(name, links);
+  byId('credits-references').append(row);
 }
 
 byId('activity').addEventListener('click', () => {

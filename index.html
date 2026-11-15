@@ -50,10 +50,29 @@
     <div class="credits-inner">
       <header class="credits-hero">
         <a href="https://science.nasa.gov/image-detail/pia17462/" class="credits-image-credit" target="_blank" rel="noreferrer">Voyager illustration · NASA/JPL-Caltech</a>
+        <p class="credits-kicker">Museum credits</p>
         <h1 id="credits-title" tabindex="-1">Still Out There</h1>
         <p id="credits-progress"></p>
         <button class="quiet" id="credits-return">Return to entrance</button>
       </header>
+      <section class="credit-section" aria-labelledby="credits-making">
+        <h2 id="credits-making">How it was made</h2>
+        <dl class="credit-rows">
+          <div><dt>The gallery</dt><dd>Built in Three.js as a first-person museum. Distance from each exhibit triggers its story, and a CSS 3D version keeps the walkthrough available on devices without WebGL.</dd></div>
+          <div><dt>The exhibits</dt><dd>The Apollo objects were reconstructed from archival photographs. The Opportunity, InSight, and Voyager models were adapted from NASA assets for the browser.</dd></div>
+          <div><dt>The narration</dt><dd>Mission records were adapted into first-person scripts, voiced with Kokoro Heart, and paired with timed captions. Voyager’s activity plays NASA’s plasma-wave data as audio.</dd></div>
+        </dl>
+      </section>
+      <section class="credit-section" aria-labelledby="credits-references-title">
+        <h2 id="credits-references-title">References</h2>
+        <dl class="credit-rows credit-source-list" id="credits-references"></dl>
+        <ul class="credits-tools">
+          <li><a href="https://www.spaceappschallenge.org/2026/challenges/nasas-discarded-equipment-storytelling/?tab=resources" target="_blank" rel="noreferrer">NASA Space Apps challenge</a></li>
+          <li><a href="https://threejs.org/" target="_blank" rel="noreferrer">Three.js</a></li>
+          <li><a href="https://github.com/ilaydaozel/3D-Art-Gallery" target="_blank" rel="noreferrer">3D Art Gallery inspiration</a></li>
+          <li><a href="https://github.com/hexgrad/kokoro" target="_blank" rel="noreferrer">Kokoro narration</a></li>
+        </ul>
+      </section>
     </div>
   </section>
   <aside id="story" aria-label="Artifact story" hidden>

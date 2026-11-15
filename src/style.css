@@ -230,6 +230,42 @@ dialog::backdrop{background:#0a0a0bb3}
   font-size: 11px;
   text-underline-offset: 3px;
 }
+.credits-kicker {
+  margin: 0 0 12px;
+  color: #d2c7b3;
+  font-size: 14px;
+  font-weight: 600;
+}
+.credit-section {
+  margin-top: clamp(36px, 6vw, 72px);
+}
+.credit-section h2 { margin: 0 0 18px; }
+.credit-rows { margin: 0; border-top: 1px solid var(--line); }
+.credit-rows > div {
+  display: grid;
+  grid-template-columns: minmax(114px, 1fr) minmax(0, 3fr);
+  align-items: baseline;
+  gap: 8px 24px;
+  padding-block: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.credit-rows dt { font-weight: 650; }
+.credit-rows dd { margin: 0; color: #cecdc9; }
+.credit-source-list dd, .credits-tools { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.credits-tools { margin: 20px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.6; }
+.credit-section a { color: #ddd0b7; text-underline-offset: 3px; }
+.credit-section a:hover, .credits-image-credit:hover { color: #fff; }
+@media (max-width: 520px) {
+  .credit-rows > div { grid-template-columns: minmax(0, 1fr); padding-block: 12px; }
+  .credit-source-list dd { gap: 4px 16px; }
+  .credits-hero { min-height: 320px; background-position: 64% 50%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #credits:not([hidden]) .credits-hero { animation: credits-arrive .45s ease-out both; }
+  @keyframes credits-arrive { from { opacity: .35; transform: translateY(7px); } }
+}
 .touch-instruction{display:none}
 #directory-title{margin:0}
 #exhibit-list{display:grid;margin:16px 0;border-top:1px solid var(--line)}
