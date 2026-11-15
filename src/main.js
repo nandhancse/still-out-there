@@ -23,10 +23,6 @@ document.body.append(audio);
 audio.preload = 'auto';
 const visited = new Set();
 const VIEW_RANGE = 6;
-const CONTROLS_SEEN_KEY = 'still-out-there-controls-seen';
-let controlsSeen = false;
-try { controlsSeen = localStorage.getItem(CONTROLS_SEEN_KEY) === '1'; }
-catch { /* The guide can still be dismissed for this visit. */ }
 let gallery;
 let inMuseum = false;
 let entering = false;
@@ -176,10 +172,8 @@ async function enterMuseum() {
   lobby.hidden = true;
   walk.hidden = false;
   inMuseum = true;
-  gallery.pause(false);
   gallery.start();
-  if (!controlsSeen) openMuseumDialog(controls);
-  else document.activeElement?.blur();
+  openMuseumDialog(controls);
 }
 
 async function showCredits() {
@@ -231,9 +225,6 @@ for (const dialog of [directory, controls]) {
   dialog.addEventListener('close', () => gallery?.pause(directory.open || controls.open));
 }
 controls.addEventListener('close', () => {
-  controlsSeen = true;
-  try { localStorage.setItem(CONTROLS_SEEN_KEY, '1'); }
-  catch { /* The in-memory setting still applies. */ }
   if (inMuseum) byId('open-controls').focus({ preventScroll: true });
 });
 byId('close-story').addEventListener('click', stopStory);

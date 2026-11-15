@@ -262,6 +262,7 @@ export function createGallery(container, exhibits, onFrame) {
   const canvas = renderer.domElement;
   let active = false;
   let blocked = false;
+  const nearExit = () => horizontalDistance(camera.position, EXIT) <= EXIT_RANGE;
 
   function clearMovement() {
     keys.clear();
@@ -296,7 +297,7 @@ export function createGallery(container, exhibits, onFrame) {
     }
   }
   canvas.addEventListener('click', event => {
-    if (active && !blocked && (event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
+    if (active && !blocked && !nearExit() && (event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
         document.pointerLockElement !== canvas) {
       try { canvas.requestPointerLock()?.catch(() => {}); }
       catch { /* Drag and keyboard look are still available. */ }
@@ -360,8 +361,9 @@ export function createGallery(container, exhibits, onFrame) {
         station.focus(focused);
         if (station.label) station.label.quaternion.copy(station.group.quaternion).invert().multiply(camera.quaternion);
       }
-      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius,
-        horizontalDistance(camera.position, EXIT) <= EXIT_RANGE);
+      const exitNearby = nearExit();
+      if (exitNearby && document.pointerLockElement === canvas) document.exitPointerLock();
+      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius, exitNearby);
     }
     renderer.render(scene, camera);
   }
