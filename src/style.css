@@ -127,7 +127,11 @@ h2{font-weight:600}
 .distance-label{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px}
 #target-range,#distance small{color:#bbbfc8;font-size:11px;white-space:nowrap}
 #distance .meter{margin:9px 0 4px}
-#exit-museum{position:absolute;top:15%;left:50%;transform:translateX(-50%);white-space:nowrap}
+#exit-fade{position:fixed;inset:0;z-index:8;background:#030405}
+@media (prefers-reduced-motion: no-preference) {
+  #exit-fade:not([hidden]) { animation: exit-fade .5s .08s ease-in both; }
+  @keyframes exit-fade { from { opacity: 0; } to { opacity: 1; } }
+}
 .meter{height:3px;background:#d3c9b132;border-radius:3px;overflow:hidden}
 .meter span{height:100%;width:100%;display:block;transform-origin:left;transform:scaleX(0);background:var(--cream)}
 .controls-button{position:absolute;left:20px;bottom:18px;min-height:44px}

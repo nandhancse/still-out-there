@@ -4,7 +4,7 @@ import { loadArtifact } from './artifact-models.js';
 
 const START = new THREE.Vector3(-4.6, 1.62, 7.6);
 const EXIT = new THREE.Vector3(START.x, 0, 13.72);
-const EXIT_RANGE = 3.45;
+const EXIT_RANGE = 1.25;
 const STORY_CLEARANCE = 1.10;
 const FALLBACK_TRIGGER = 1.85;
 const MAX_PITCH = Math.PI * 0.39;
@@ -262,7 +262,6 @@ export function createGallery(container, exhibits, onFrame) {
   const canvas = renderer.domElement;
   let active = false;
   let blocked = false;
-  const nearExit = () => horizontalDistance(camera.position, EXIT) <= EXIT_RANGE;
 
   function clearMovement() {
     keys.clear();
@@ -297,7 +296,7 @@ export function createGallery(container, exhibits, onFrame) {
     }
   }
   canvas.addEventListener('click', event => {
-    if (active && !blocked && !nearExit() && (event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
+    if (active && !blocked && (event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
         document.pointerLockElement !== canvas) {
       try { canvas.requestPointerLock()?.catch(() => {}); }
       catch { /* Drag and keyboard look are still available. */ }
@@ -361,9 +360,8 @@ export function createGallery(container, exhibits, onFrame) {
         station.focus(focused);
         if (station.label) station.label.quaternion.copy(station.group.quaternion).invert().multiply(camera.quaternion);
       }
-      const exitNearby = nearExit();
-      if (exitNearby && document.pointerLockElement === canvas) document.exitPointerLock();
-      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius, exitNearby);
+      onFrame(nearest.exhibit, nearest.distance - nearest.radius, nearest.trigger - nearest.radius,
+        horizontalDistance(camera.position, EXIT) <= EXIT_RANGE);
     }
     renderer.render(scene, camera);
   }
@@ -390,14 +388,13 @@ export function createGallery(container, exhibits, onFrame) {
     pause(value) { blocked = value; if (value) clearMovement(); },
     releasePointer: clearMovement,
     goToExit() {
-      camera.position.set(EXIT.x, START.y, EXIT.z - (EXIT_RANGE - .35));
+      camera.position.set(EXIT.x, START.y, EXIT.z - 3.1);
       camera.lookAt(EXIT.x, 1.85, EXIT.z);
       clearMovement();
     },
     openExit() {
       blocked = true;
       clearMovement();
-      camera.lookAt(EXIT.x, 1.85, EXIT.z);
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return Promise.resolve();
       return new Promise(resolve => {
         const start = performance.now();

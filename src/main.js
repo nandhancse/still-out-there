@@ -6,7 +6,7 @@ const byId = id => document.getElementById(id);
 const lobby = byId('lobby');
 const walk = byId('walk');
 const credits = byId('credits');
-const exitMuseum = byId('exit-museum');
+const exitFade = byId('exit-fade');
 const directory = byId('directory');
 const controls = byId('controls');
 const story = byId('story');
@@ -125,9 +125,12 @@ function playStory(exhibit) {
 }
 
 function approach(exhibit, distance, triggerRange, nearExit) {
-  exitMuseum.hidden = !nearExit;
+  if (nearExit) {
+    void showCredits();
+    return;
+  }
   distance = Math.max(0, distance);
-  distancePanel.hidden = nearExit || distance > VIEW_RANGE;
+  distancePanel.hidden = distance > VIEW_RANGE;
   if (distancePanel.hidden) return;
   const rounded = `${distance.toFixed(1)} m`;
   const progress = Math.min(1, Math.max(0, (VIEW_RANGE - distance) / (VIEW_RANGE - triggerRange)));
@@ -177,11 +180,12 @@ async function enterMuseum() {
 }
 
 async function showCredits() {
-  exitMuseum.hidden = true;
+  if (!inMuseum) return;
+  inMuseum = false;
   walk.inert = true;
+  exitFade.hidden = false;
   stopStory();
   await gallery.openExit();
-  inMuseum = false;
   gallery.stop();
   walk.hidden = true;
   walk.inert = false;
@@ -189,6 +193,7 @@ async function showCredits() {
   byId('credits-progress').textContent = `You explored ${visited.size} of ${exhibits.length} exhibits.`;
   credits.hidden = false;
   credits.scrollTop = 0;
+  exitFade.hidden = true;
   byId('credits-title').focus({ preventScroll: true });
 }
 
@@ -210,13 +215,7 @@ function openMuseumDialog(dialog) {
 
 byId('enter').addEventListener('click', enterMuseum);
 for (const id of ['intro-sound','tour-sound']) byId(id).addEventListener('click', toggleSound);
-byId('to-exit').addEventListener('click', () => {
-  gallery.goToExit();
-  exitMuseum.hidden = false;
-  distancePanel.hidden = true;
-  exitMuseum.focus({ preventScroll: true });
-});
-exitMuseum.addEventListener('click', showCredits);
+byId('to-exit').addEventListener('click', () => gallery.goToExit());
 byId('credits-return').addEventListener('click', returnToEntrance);
 for (const id of ['open-exhibits','tour-exhibits']) byId(id).addEventListener('click', openDirectory);
 byId('close-directory').addEventListener('click', () => directory.close());
