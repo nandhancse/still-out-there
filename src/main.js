@@ -158,7 +158,7 @@ async function enterMuseum() {
   try {
     if (!gallery) {
       const { createGallery } = await import('./gallery.js');
-      gallery = createGallery(byId('scene'), exhibits, approach);
+      gallery = createGallery(byId('scene'), exhibits, approach, showCredits);
       await gallery.load();
     }
   } catch (error) {

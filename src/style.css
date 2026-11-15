@@ -374,7 +374,9 @@ dialog::backdrop{background:#0a0a0bb3}
 .room-exit-sign {
   display: grid;
   place-items: center;
-  color: #f3e7d0;
-  font-size: 30px;
-  font-weight: 650;
+  border: 2px solid #ff898b;
+  background: #d71920;
+  color: #fff;
+  font-size: 27px;
+  font-weight: 700;
 }

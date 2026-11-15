@@ -5,13 +5,14 @@ import { loadArtifact } from './artifact-models.js';
 const START = new THREE.Vector3(-4.6, 1.62, 7.6);
 const EXIT = new THREE.Vector3(START.x, 0, 13.72);
 const EXIT_RANGE = 1.25;
+const EXIT_BUTTON_RANGE = 4;
 const STORY_CLEARANCE = 1.10;
 const FALLBACK_TRIGGER = 1.85;
 const MAX_PITCH = Math.PI * 0.39;
 const WALK_SPEED = 4.1;
 const horizontalDistance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
-export function createGallery(container, exhibits, onFrame) {
+export function createGallery(container, exhibits, onFrame, onExit) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#111824');
   scene.fog = new THREE.FogExp2('#131b29', 0.018);
@@ -132,6 +133,26 @@ export function createGallery(container, exhibits, onFrame) {
   door.position.copy(EXIT);
   door.rotation.y = Math.PI;
   scene.add(door);
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 440;
+  signCanvas.height = 160;
+  const signPaint = signCanvas.getContext('2d');
+  signPaint.fillStyle = '#d71920';
+  signPaint.fillRect(0, 0, 440, 160);
+  signPaint.strokeStyle = '#ff898b';
+  signPaint.lineWidth = 7;
+  signPaint.strokeRect(4, 4, 432, 152);
+  signPaint.fillStyle = '#fff';
+  signPaint.textAlign = 'center';
+  signPaint.textBaseline = 'middle';
+  signPaint.font = '700 87px "Instrument Sans", Arial, sans-serif';
+  signPaint.fillText('EXIT', 220, 82);
+  const signTexture = new THREE.CanvasTexture(signCanvas);
+  signTexture.colorSpace = THREE.SRGBColorSpace;
+  const exitSign = new THREE.Mesh(new THREE.PlaneGeometry(1.38, .50),
+    new THREE.MeshBasicMaterial({ map: signTexture, toneMapped: false }));
+  exitSign.position.set(0, 3.42, .12);
+  door.add(exitSign);
   const doorLeaves = [-1, 1].map(side => {
     const hinge = new THREE.Group();
     hinge.position.set(side * 1.18, 0, .1);
@@ -142,7 +163,7 @@ export function createGallery(container, exhibits, onFrame) {
     for (const { side, hinge } of doorLeaves) hinge.rotation.y = side * 1.38 * amount;
   }
   if (css) {
-    css.exitDoor(door, doorLeaves);
+    css.exitDoor(door, doorLeaves, exitSign);
   } else {
     const doorPanel = new THREE.MeshStandardMaterial({ color: '#434951', roughness: .55, metalness: .35 });
     const space = imageLoader.load(`${import.meta.env.BASE_URL}exhibits/entrance.webp`);
@@ -161,10 +182,6 @@ export function createGallery(container, exhibits, onFrame) {
     }
     makeBox(2.35, .034, .06, 0, 2.94, .16, warm, door);
     makeBox(2.44, .027, .17, 0, .014, .08, materials.trim, door);
-    const sign = plaque('Exit', '', '#f0d4a1');
-    sign.scale.setScalar(.72);
-    sign.position.set(0, 3.36, .11);
-    door.add(sign);
   }
 
   const shadowCanvas = document.createElement('canvas');
@@ -258,8 +275,10 @@ export function createGallery(container, exhibits, onFrame) {
   const desktopKeys = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyQ','KeyE']);
   const direction = new THREE.Vector3();
   const next = new THREE.Vector3();
-  const pointer = { id: null, x: 0, y: 0 };
+  const pointer = { id: null, x: 0, y: 0, travel: 0 };
   const canvas = renderer.domElement;
+  const signRay = new THREE.Raycaster();
+  const signAim = new THREE.Vector2();
   let active = false;
   let blocked = false;
 
@@ -272,6 +291,20 @@ export function createGallery(container, exhibits, onFrame) {
   function look(dx, dy) {
     camera.rotation.y -= dx * .003;
     camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * .003, -MAX_PITCH, MAX_PITCH);
+  }
+
+  function clickedExitSign(event) {
+    const locked = document.pointerLockElement === canvas;
+    if ((!locked && pointer.travel > 6) || horizontalDistance(camera.position, EXIT) > EXIT_BUTTON_RANGE) return false;
+    if (locked) signAim.set(0, 0);
+    else {
+      const bounds = canvas.getBoundingClientRect();
+      signAim.set(2 * (event.clientX - bounds.left) / bounds.width - 1,
+        1 - 2 * (event.clientY - bounds.top) / bounds.height);
+    }
+    camera.updateMatrixWorld();
+    signRay.setFromCamera(signAim, camera);
+    return signRay.intersectObject(exitSign, false).length > 0;
   }
 
   window.addEventListener('keydown', event => {
@@ -296,7 +329,12 @@ export function createGallery(container, exhibits, onFrame) {
     }
   }
   canvas.addEventListener('click', event => {
-    if (active && !blocked && (event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
+    if (!active || blocked) return;
+    if (clickedExitSign(event)) {
+      void onExit();
+      return;
+    }
+    if ((event.pointerType === 'mouse' || !event.pointerType) && !matchMedia('(pointer:coarse)').matches &&
         document.pointerLockElement !== canvas) {
       try { canvas.requestPointerLock()?.catch(() => {}); }
       catch { /* Drag and keyboard look are still available. */ }
@@ -307,10 +345,12 @@ export function createGallery(container, exhibits, onFrame) {
     pointer.id = event.pointerId;
     pointer.x = event.clientX;
     pointer.y = event.clientY;
+    pointer.travel = 0;
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', event => {
     if (!active || blocked || pointer.id !== event.pointerId || document.pointerLockElement === canvas) return;
+    pointer.travel += Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y);
     look(event.clientX - pointer.x, event.clientY - pointer.y);
     pointer.x = event.clientX; pointer.y = event.clientY;
   });
@@ -388,8 +428,8 @@ export function createGallery(container, exhibits, onFrame) {
     pause(value) { blocked = value; if (value) clearMovement(); },
     releasePointer: clearMovement,
     goToExit() {
-      camera.position.set(EXIT.x, START.y, EXIT.z - 3.1);
-      camera.lookAt(EXIT.x, 1.85, EXIT.z);
+      camera.position.set(EXIT.x, START.y, EXIT.z - 3.35);
+      camera.lookAt(EXIT.x, 2.05, EXIT.z);
       clearMovement();
     },
     openExit() {
