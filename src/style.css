@@ -182,51 +182,72 @@ dialog::backdrop{background:#0a0a0bb3}
 #credits {
   position: fixed;
   inset: 0;
+  overflow: hidden;
+  background: #030405;
+}
+.credits-stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.credits-stars::before, .credits-stars::after {
+  content: '';
+  position: absolute;
+  inset: -64px;
+  background-size: 360px 440px;
+  background-image:
+    radial-gradient(circle at 13% 9%, #e0e6f3a6 0 .8px, transparent 1.45px),
+    radial-gradient(circle at 61% 19%, #c1c9d47a 0 1px, transparent 1.65px),
+    radial-gradient(circle at 35% 46%, #e0e6f39a 0 .7px, transparent 1.4px),
+    radial-gradient(circle at 91% 38%, #c1c9d467 0 .8px, transparent 1.4px),
+    radial-gradient(circle at 19% 77%, #d1d5df92 0 1px, transparent 1.6px),
+    radial-gradient(circle at 74% 86%, #d1d5df90 0 .75px, transparent 1.4px);
+}
+.credits-stars::after { opacity: .45; background-size: 475px 390px; background-position: 64px 36px; }
+.credits-actions {
+  position: absolute;
+  z-index: 1;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  display: flex;
+  gap: 6px;
+}
+.credits-actions .quiet { min-height: 44px; background: #0d1013e8; }
+.credits-actions .quiet:hover { background: #23262b; }
+#credits-roll {
+  position: relative;
+  height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: #101214;
+  scrollbar-width: none;
+  mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
 }
+#credits-roll:focus-visible { outline: 1px solid var(--line); outline-offset: -8px; }
 .credits-inner {
-  width: min(1050px, calc(100% - 40px));
+  width: min(760px, calc(100% - 44px));
   margin-inline: auto;
-  padding-block: clamp(20px, 5vw, 64px);
 }
-.credits-hero {
-  position: relative;
-  min-height: 360px;
+.credits-hero, .credits-ending {
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: clamp(22px, 6vw, 70px);
-  padding-bottom: max(68px, 6vw);
-  border: 1px solid var(--line);
-  background: linear-gradient(90deg, #0b0e12ee, #0b0e1299 42%, #0b0e1230),
-    url('/exhibits/entrance.webp') 72% 49% / cover;
+  padding-block: 48px;
+  text-align: center;
 }
 #credits-title {
-  max-width: 9ch;
   margin: 0;
-  font-size: clamp(49px, 8.1vw, 102px);
-  font-weight: 650;
+  font-family: Georgia, serif;
+  font-size: clamp(51px, 9vw, 98px);
+  font-weight: 400;
   line-height: .98;
   letter-spacing: -.058em;
 }
-#credits-title:focus{outline:none}
-#credits-progress{margin:14px 0 22px;color:#dad9d5;font-size:16px}
-.credits-image-credit {
-  position: absolute;
-  inset: auto 18px 14px auto;
-  color: #deddd8;
-  font-size: 11px;
-  text-underline-offset: 3px;
-}
-.credits-kicker {
-  margin: 0 0 12px;
-  color: #d2c7b3;
-  font-size: 14px;
-  font-weight: 600;
-}
+#credits-title:focus, #credits-thanks:focus { outline: none; }
+#credits-progress{margin:17px 0 0;color:#cfcec9;font-size:16px}
+#credits-thanks { margin: 0 0 26px; font-size: clamp(42px, 8vw, 76px); }
 .credit-section {
   margin-top: clamp(36px, 6vw, 72px);
 }
@@ -247,7 +268,7 @@ dialog::backdrop{background:#0a0a0bb3}
 .credit-source-list dd, .credits-tools { display: flex; flex-wrap: wrap; gap: 6px 20px; }
 .credits-tools { margin: 20px 0 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.6; }
 .credit-section a { color: #ddd0b7; text-underline-offset: 3px; }
-.credit-section a:hover, .credits-image-credit:hover { color: #fff; }
+.credit-section a:hover { color: #fff; }
 .credits-team {
   margin-top: clamp(42px, 8vw, 92px);
   padding-block: clamp(42px, 8vw, 86px) 28px;
@@ -269,11 +290,13 @@ dialog::backdrop{background:#0a0a0bb3}
 @media (max-width: 520px) {
   .credit-rows > div { grid-template-columns: minmax(0, 1fr); padding-block: 12px; }
   .credit-source-list dd { gap: 4px 16px; }
-  .credits-hero { min-height: 320px; background-position: 64% 50%; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  #credits:not([hidden]) .credits-hero { animation: credits-arrive .45s ease-out both; }
+  #credits:not([hidden]) #credits-roll { animation: credits-arrive .7s ease-out both; }
+  #credits:not([hidden]) .credits-stars::before { animation: star-drift 27s ease-in-out infinite alternate; }
+  #credits:not([hidden]) .credits-stars::after { animation: star-drift 42s ease-in-out infinite alternate-reverse; }
   @keyframes credits-arrive { from { opacity: .35; transform: translateY(7px); } }
+  @keyframes star-drift { to { transform: translate3d(43px, -54px, 0); } }
 }
 .touch-instruction{display:none}
 #directory-title{margin:0}

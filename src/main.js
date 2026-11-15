@@ -1,11 +1,12 @@
 import './style.css';
 import { exhibits } from './exhibits.js';
 import { durations } from './narration.js';
+import { createCreditsRoll } from './credits.js';
 
 const byId = id => document.getElementById(id);
 const lobby = byId('lobby');
 const walk = byId('walk');
-const credits = byId('credits');
+const credits = createCreditsRoll(byId('credits'));
 const exitFade = byId('exit-fade');
 const directory = byId('directory');
 const controls = byId('controls');
@@ -190,15 +191,12 @@ async function showCredits() {
   walk.hidden = true;
   walk.inert = false;
   distancePanel.hidden = true;
-  byId('credits-progress').textContent = `You explored ${visited.size} of ${exhibits.length} exhibits.`;
-  credits.hidden = false;
-  credits.scrollTop = 0;
+  credits.show(visited.size, exhibits.length);
   exitFade.hidden = true;
-  byId('credits-title').focus({ preventScroll: true });
 }
 
 function returnToEntrance() {
-  credits.hidden = true;
+  credits.hide();
   lobby.hidden = false;
   byId('enter').focus();
 }
